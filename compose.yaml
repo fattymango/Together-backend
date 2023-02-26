@@ -1,0 +1,33 @@
+services:
+  redis: 
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "${ENV_REDIS_PORT}:${ENV_REDIS_PORT}"
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "${ENV_POSTGRES_PORT}:${ENV_POSTGRES_PORT}"
+    volumes:
+      - pgdata:/var/lib/posgresql/data
+  django:
+    build: .
+    container_name: django
+    ports:
+      - "${ENV_DJANGO_PORT}:${ENV_DJANGO_PORT}"
+    env_file:
+      - ".env"
+    volumes:
+      - .:/code
+      - media:/app/demoo/${MEDIA_URL}
+    depends_on:
+      - redis
+      - db
+    
+volumes:
+  media: {}
+  pgdata:
