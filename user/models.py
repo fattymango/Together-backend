@@ -4,13 +4,15 @@ from django.contrib.auth.models import (
 )
 from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
-import pandas 
+import pandas
 from user.signals import receiver_with_multiple_senders
+
+
 def validate_justID(justID):
-	
 	data = pandas.read_excel(r'user/static/justIDs.xlsx')
 	IDs = pandas.DataFrame(data, columns=['justID'])
 	return int(justID) in IDs.values
+
 
 class MyUserManager(BaseUserManager):
 	def create_user(self, email, justID, password):
@@ -25,7 +27,7 @@ class MyUserManager(BaseUserManager):
 			email=self.normalize_email(email),
 			justID=justID
 		)
-		
+
 		user.set_password(password)
 		user.save(using=self._db)
 		return user
@@ -47,24 +49,22 @@ class MyUserManager(BaseUserManager):
 
 
 class BasicUser(AbstractBaseUser):
-
 	GENDER_CHOICES = (('M', 'Male'), ('F', 'Female'),)
-	email 		= models.EmailField(verbose_name='email address',max_length=255,unique=True,)
-	justID 		= models.PositiveIntegerField(verbose_name="university ID",unique=True,blank=False,null=False)
-	full_name 	= models.CharField(verbose_name="full name", max_length=100)
-	gender 		= models.CharField(max_length=1, choices=GENDER_CHOICES)
-	is_active 	= models.BooleanField(default=True)
-	is_admin 	= models.BooleanField(default=False)
-	is_online 	= models.BooleanField(default=False)
-
+	email = models.EmailField(verbose_name='email address', max_length=255, unique=True, )
+	justID = models.PositiveIntegerField(verbose_name="university ID", unique=True, blank=False, null=False)
+	full_name = models.CharField(verbose_name="full name", max_length=100)
+	gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+	is_active = models.BooleanField(default=True)
+	is_admin = models.BooleanField(default=False)
+	is_online = models.BooleanField(default=False)
 
 	objects = MyUserManager()
 
 	USERNAME_FIELD = 'email'
 	REQUIRED_FIELDS = ['justID']
-	
+
 	def __str__(self):
-		return self.email
+		return self.email + "," + str(self.justID)
 
 	def has_perm(self, perm, obj=None):
 		"Does the user have a specific permission?"
@@ -88,18 +88,16 @@ class SpecialNeed(BasicUser):
 
 	disability_type = models.CharField(verbose_name="type of disability", max_length=1, choices=DISABILITY_CHOICES)
 
-	# @property
-	# def disability_type(self):
-	# 	return self.disability_type
-
 
 class Volunteer(BasicUser):
 	is_validated = models.BooleanField(verbose_name="is the user valid to volunteer", default=False)
 
+
 class Admin(BasicUser):
 	pass
 
-@receiver_with_multiple_senders(post_save, senders=[BasicUser,Volunteer,SpecialNeed,Admin])
+
+@receiver_with_multiple_senders(post_save, senders=[BasicUser, Volunteer, SpecialNeed, Admin])
 def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
+	if created:
+		Token.objects.create(user=instance)

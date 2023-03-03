@@ -10,5 +10,4 @@ RUN apk add --no-cache libstdc++
 COPY . /code
 VOLUME /app/demoo/${MEDIA_URL}
 EXPOSE 8000
-
 CMD python manage.py runserver $ENV_DJANGO_HOST:$ENV_DJANGO_PORT

@@ -70,7 +70,6 @@ class login(APIView):
 
     def post(self, request):
         context = {}
-
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(email=username, password=password)

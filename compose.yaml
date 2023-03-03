@@ -13,7 +13,7 @@ services:
     ports:
       - "${ENV_POSTGRES_PORT}:${ENV_POSTGRES_PORT}"
     volumes:
-      - pgdata:/var/lib/posgresql/data
+      - pgdata:/var/lib/postgres/data
   django:
     build: .
     container_name: django
@@ -24,6 +24,8 @@ services:
     volumes:
       - .:/code
       - media:/app/demoo/${MEDIA_URL}
+    links:
+      - db:db
     depends_on:
       - redis
       - db

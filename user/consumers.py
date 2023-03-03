@@ -1,17 +1,18 @@
+
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 
 from channels_permissions.consumers import Permissions
-from channels_permissions.permissions import NotAnonymousUser, RequestNotAssigned, VolunteerValidated
+from channels_permissions.permissions import NotAnonymousUser
+from .permissions import UserOwnsRoom
 
 
-class RequestConsumer(Permissions, JsonWebsocketConsumer):
-	permission_classes = [NotAnonymousUser, RequestNotAssigned, VolunteerValidated]
-
+class UserConsumer(Permissions, JsonWebsocketConsumer):
+	permission_classes = [NotAnonymousUser, UserOwnsRoom]
 
 	def connect(self):
 		self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
-		self.room_group_name = "request%s" % self.room_name
+		self.room_group_name = "user%s" % self.room_name
 		self.check_permissions()
 		# Join room group
 		async_to_sync(self.channel_layer.group_add)(
@@ -28,15 +29,15 @@ class RequestConsumer(Permissions, JsonWebsocketConsumer):
 
 	# Receive message from WebSocket
 	def receive_json(self, content, **kwargs):
-		message = content["message"]
+		data = content["data"]
 		# Send message to room group
 		async_to_sync(self.channel_layer.group_send)(
-			self.room_group_name, {"type": "chat_message", "message": message, "user": self.scope["user"].email}
+			self.room_group_name, {"type": "chat_message", "data": data}
 		)
 
 	# Receive message from room group
 	def chat_message(self, event):
-		message = event["message"]
+		data = event["data"]
 
 		# Send message to WebSocket
-		self.send_json(content={"message": message, "user": event["user"]})
+		self.send_json(content={"data": data})
