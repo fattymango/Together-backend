@@ -5,8 +5,8 @@ urlpatterns = [
 path('api/volunteer/register', views.RegisterVolunteerUser.as_view(), name="volunteer-register"),
 path('api/specialneeds/register', views.RegisterSpecialNeedUser.as_view(), name="specialneeds-register"),
 path('api/admin/register', views.RegisterAdminUser.as_view(), name="admin-register"),
-path('api/Login', views.Login.as_view(), name="Login"),
-path('api/setonline', views.SetOnline.as_view(), name="SetOnline"),
+path('api/login', views.login.as_view(), name="login"),
+path('api/setonline', views.set_online.as_view(), name="set_online"),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

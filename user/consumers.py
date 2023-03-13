@@ -9,20 +9,16 @@ from .permissions import UserOwnsRoom
 
 class UserConsumer(Permissions, JsonWebsocketConsumer):
 	permission_classes = [NotAnonymousUser, UserOwnsRoom]
-	room_name_arg = "room_name"
-	def connect(self):
-		print("called")
-		print(self.channel_name)
 
-		self.room_name = self.scope["url_route"]["kwargs"][self.room_name_arg]
+	def connect(self):
+		self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
 		self.room_group_name = "user%s" % self.room_name
-		self.channel_name = self.room_group_name
-		print(self.channel_name)
 		self.check_permissions()
 		# Join room group
 		async_to_sync(self.channel_layer.group_add)(
 			self.room_group_name, self.channel_name
 		)
+
 		self.accept()
 
 	def disconnect(self, close_code):
