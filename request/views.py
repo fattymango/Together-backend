@@ -1,4 +1,4 @@
-
+from asgiref.sync import async_to_sync
 from rest_framework import generics, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.sites.shortcuts import get_current_site
 from .permissions import *
-
+from channels.layers import get_channel_layer
 
 
 # Create your views here.
@@ -71,14 +71,15 @@ class CancelRequest(AcceptRequest):
 
 class FinishRequest(AcceptRequest):
 	permission_classes = [IsAuthenticated,IsSpecialNeeds, OwnsRequest]
-
 	def patch(self, request, *args, **kwargs):
 		try:
 			request.data.update({'is_finished': True})
 		except AttributeError:
 			request.data._mutable = True
 			request.data.update({'is_finished': True})
-
+		channel_layer = get_channel_layer()
+		async_to_sync(channel_layer.group_discard)(
+			"user4", "user4")
+		print("a7a")
 		return self.partial_update(request, *args, **kwargs)
-
 

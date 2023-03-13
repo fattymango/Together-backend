@@ -30,6 +30,5 @@ def create_auth_token(sender, instance : Request = None, created=False, **kwargs
 				"date_created": str(instance.date_created),
 				"location":     str(instance.location),
 				"help_type":    str(instance.help_type),
-				"websocket":    "".join(
-				["ws://localhost/ws/request/",str(instance.pk), "/"])
+				"websocket":    "".join(["ws://localhost/ws/request/",str(instance.pk), "/"])
 			}})
