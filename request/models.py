@@ -21,11 +21,11 @@ class Request(models.Model):
 @receiver(post_save, sender=Request)
 def create_auth_token(sender, instance : Request = None, created=False, **kwargs):
 	if created:
-
 		users = Volunteer.objects.filter(is_validated = True)
 		channel_layer = get_channel_layer()
 		for user in users:
-			async_to_sync(channel_layer.group_send)("user"+str(user.pk), {"type": "chat_message", "data": {
+			async_to_sync(channel_layer.group_send)("user"+str(user.justID), {"type": "chat_message", "data":
+				{
 				"specialNeeds": str(instance.specialNeeds.justID),
 				"date_created": str(instance.date_created),
 				"location":     str(instance.location),
