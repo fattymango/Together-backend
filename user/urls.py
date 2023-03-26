@@ -2,11 +2,13 @@ from django.urls import path
 from . import views
 from rest_framework.urlpatterns import format_suffix_patterns
 urlpatterns = [
-path('api/volunteer/register', views.RegisterVolunteerUser.as_view(), name="volunteer-register"),
-path('api/specialneeds/register', views.RegisterSpecialNeedUser.as_view(), name="specialneeds-register"),
-path('api/admin/register', views.RegisterAdminUser.as_view(), name="admin-register"),
-path('api/login', views.login.as_view(), name="login"),
-path('api/setonline', views.set_online.as_view(), name="set_online"),
+path('api/volunteer/register', views.VolunteerUserRegistration.as_view(), name="volunteer-register"),
+path('api/specialneeds/register', views.SpecialNeedUserRegistration.as_view(), name="specialneeds-register"),
+path('api/admin/register', views.AdminUserRegistration.as_view(), name="admin-register"),
+path('api/login', views.UserLogin.as_view(), name="Login"),
+path('api/setonline', views.SetUserOnline.as_view(), name="SetUserOnline"),
+path('activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/',
+        views.ActivateUser.as_view(), name='activate'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

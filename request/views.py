@@ -1,4 +1,3 @@
-
 from rest_framework import generics, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
@@ -9,12 +8,11 @@ from django.contrib.sites.shortcuts import get_current_site
 from .permissions import *
 
 
-
 # Create your views here.
 class CreateRequest(generics.CreateAPIView):
 	queryset = Request.objects.all()
 	serializer_class = RequestSerializer
-	permission_classes = [IsAuthenticated,IsSpecialNeeds,NoOpenRequest]
+	permission_classes = [IsAuthenticated, IsSpecialNeeds, NoOpenRequest]
 	authentication_classes = [TokenAuthentication]
 
 	def create(self, request, *args, **kwargs):
@@ -25,7 +23,6 @@ class CreateRequest(generics.CreateAPIView):
 			except AttributeError:
 				request.data._mutable = True
 				request.data.update({'specialNeeds': request.user.pk})
-
 
 			response = super().create(request, *args, **kwargs)
 
@@ -40,7 +37,7 @@ class CreateRequest(generics.CreateAPIView):
 class AcceptRequest(generics.UpdateAPIView):
 	queryset = Request.objects.all()
 	serializer_class = UpdateRequestSerializer
-	permission_classes = [IsAuthenticated, CanAssignRequestPermission]
+	permission_classes = [IsAuthenticated, CanAssignRequestPermission, RequestNotFinished]
 	authentication_classes = [TokenAuthentication]
 
 	def put(self, request, *args, **kwargs):
@@ -57,7 +54,7 @@ class AcceptRequest(generics.UpdateAPIView):
 
 
 class CancelRequest(AcceptRequest):
-	permission_classes = [IsAuthenticated, CanCancelRequestPermission]
+	permission_classes = [IsAuthenticated, CanCancelRequestPermission, RequestNotFinished]
 
 	def patch(self, request, *args, **kwargs):
 		try:
@@ -70,7 +67,7 @@ class CancelRequest(AcceptRequest):
 
 
 class FinishRequest(AcceptRequest):
-	permission_classes = [IsAuthenticated,IsSpecialNeeds, OwnsRequest]
+	permission_classes = [IsAuthenticated, IsSpecialNeeds, OwnsRequest, RequestNotFinished]
 
 	def patch(self, request, *args, **kwargs):
 		try:
@@ -80,5 +77,3 @@ class FinishRequest(AcceptRequest):
 			request.data.update({'is_finished': True})
 
 		return self.partial_update(request, *args, **kwargs)
-
-

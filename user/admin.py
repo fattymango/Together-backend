@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin 
 
-from .models import BasicUser,SpecialNeed,Volunteer,Admin
+from .models import BaseUser,SpecialNeed,Volunteer,Admin
 
 class BaseUserAdmin(UserAdmin):
     fieldsets = (
@@ -43,7 +43,7 @@ class VolunteerAdmin(BaseUserAdmin):
 class AdminUserAdmin(BaseUserAdmin):
     pass
 
-admin.site.register(BasicUser, BaseUserAdmin)
+admin.site.register(BaseUser, BaseUserAdmin)
 admin.site.register(SpecialNeed, SpecialNeedAdmin)
 admin.site.register(Volunteer, VolunteerAdmin)
 admin.site.register(Admin, AdminUserAdmin)

@@ -1,9 +1,35 @@
 services:
-  redis: 
+  # Redis for caching #
+  redis-master:
     image: redis:latest
-    container_name: redis
     ports:
-      - "${ENV_REDIS_PORT}:${ENV_REDIS_PORT}"
+      - "${ENV_REDIS_MASTER_PORT}:${ENV_REDIS_MASTER_PORT}"
+    volumes:
+      - broker-data:/data
+    networks:
+      - backend
+
+
+  redis-slave:
+    image: redis:latest
+    command: redis-server --port ${ENV_REDIS_SLAVE_PORT} --slaveof redis-master ${ENV_REDIS_MASTER_PORT}
+    ports:
+      - "${ENV_REDIS_SLAVE_PORT}:${ENV_REDIS_SLAVE_PORT}"
+    volumes:
+      - broker-data:/data
+    depends_on:
+      - redis-master
+    networks:
+      - backend
+
+
+# Redis/Rabbitmq for msg queue #
+  redis-broker:
+    image: "redis:latest"
+    command: redis-server --port ${ENV_REDIS_BROKER_PORT}
+    networks:
+      - backend
+
   db:
     image: postgres
     environment:
@@ -14,6 +40,9 @@ services:
       - "${ENV_POSTGRES_PORT}:${ENV_POSTGRES_PORT}"
     volumes:
       - pgdata:/var/lib/postgres/data
+    networks:
+      - backend
+
   django:
     build: .
     container_name: django
@@ -24,12 +53,31 @@ services:
     volumes:
       - .:/code
       - media:/app/demoo/${MEDIA_URL}
-    links:
-      - db:db
+#    links:
+#      - db:db
+    networks:
+      - backend
     depends_on:
-      - redis
+      - redis-master
       - db
-    
+
+  celery:
+    build: .
+    command: celery -A server worker -l INFO --concurrency 3 -E
+    volumes:
+        - .:/code
+    environment:
+        - DEBUG=1
+        # - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+    networks:
+        - backend
+    depends_on:
+      - django
+      - redis-broker
 volumes:
   media: {}
   pgdata:
+  broker-data:
+
+networks:
+  backend:

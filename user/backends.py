@@ -1,6 +1,6 @@
 
 from django.contrib.auth import backends, get_user_model
-from django.db.models import Q
+
 
 
 UserModel = get_user_model()
@@ -11,8 +11,10 @@ class EmailOrJustIDModelBackend(backends.ModelBackend):
         if username is None or password is None:
             return
         try:
-            user = UserModel.objects.get(
-                Q(justID=username) | Q(email=username))
+            if username.isdigit():
+                user = UserModel.objects.get(justID=username)
+            else:
+                user = UserModel.objects.get(email=username)
         except UserModel.DoesNotExist:
             # Run the default password hasher once to reduce the timing
             # difference between an existing and a nonexistent user (#20760).

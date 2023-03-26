@@ -2,12 +2,11 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 
 from channels_permissions.consumers import Permissions
-from channels_permissions.permissions import NotAnonymousUser, RequestNotAssigned, VolunteerValidated
+from channels_permissions.permissions import *
 
 
 class RequestConsumer(Permissions, JsonWebsocketConsumer):
-	permission_classes = [NotAnonymousUser, RequestNotAssigned, VolunteerValidated]
-
+	permission_classes = []
 
 	def connect(self):
 		self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
@@ -40,3 +39,11 @@ class RequestConsumer(Permissions, JsonWebsocketConsumer):
 
 		# Send message to WebSocket
 		self.send_json(content={"message": message, "user": event["user"]})
+
+
+class VolunteerRequestConsumer(RequestConsumer):
+	permission_classes = [NotAnonymousUser, IsVolunteer, VolunteerValidated, AssignedToRequest]
+
+
+class SpecialNeedsRequestConsumer(RequestConsumer):
+	permission_classes = [NotAnonymousUser,isSpecialNeeds, OwnsRequest]

@@ -3,8 +3,10 @@ from channels_permissions.permissions import get_request, get_volunteer
 from user.models import SpecialNeed, Volunteer
 from .models import Request
 
+
 class CanAssignRequestPermission(permissions.BasePermission):
 	message = 'You cannot accept this request.'
+
 	def has_permission(self, request, view):
 		try:
 			user = get_volunteer(request.user.pk)
@@ -14,9 +16,9 @@ class CanAssignRequestPermission(permissions.BasePermission):
 			return False
 
 
-
 class CanCancelRequestPermission(permissions.BasePermission):
 	message = 'You cannot cancel this request.'
+
 	def has_permission(self, request, view):
 		try:
 
@@ -28,8 +30,10 @@ class CanCancelRequestPermission(permissions.BasePermission):
 			return False
 		return True
 
+
 class IsSpecialNeeds(permissions.BasePermission):
 	message = 'You must be a Special Needs user to create a request.'
+
 	def has_permission(self, request, view):
 		try:
 			user = get_specialneeds(request.user.pk)
@@ -39,8 +43,10 @@ class IsSpecialNeeds(permissions.BasePermission):
 			return False
 		return True
 
+
 class NoOpenRequest(permissions.BasePermission):
 	message = 'You cannot create this request, you have a current request.'
+
 	def has_permission(self, request, view):
 		try:
 			req = get_user_request(request.user.pk)
@@ -59,8 +65,20 @@ class OwnsRequest(permissions.BasePermission):
 	def has_permission(self, request, view):
 		try:
 			req = get_request(view.kwargs.get('pk'))
-			print(req.specialNeeds ,request.user.pk)
+			print(req.specialNeeds, request.user.pk)
 			return req.specialNeeds.pk == request.user.pk
+		except Exception:
+
+			return False
+
+
+class RequestNotFinished(permissions.BasePermission):
+	message = 'This Request is finished.'
+
+	def has_permission(self, request, view):
+		try:
+			req = get_request(view.kwargs.get('pk'))
+			return not req.is_finished
 		except Exception:
 
 			return False

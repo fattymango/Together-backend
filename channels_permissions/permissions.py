@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AnonymousUser
 
 from request.models import Request
-from user.models import Volunteer
+from user.models import Volunteer,SpecialNeed
 
 
 class BasePermission(object):
@@ -29,14 +29,14 @@ class NotAnonymousUser(BasePermission):
 			return False
 
 
-class RequestNotAssigned(BasePermission):
+class AssignedToRequest(BasePermission):
 
 	def has_permission(self, *args, **kwargs) -> bool:
 		try:
 			request = get_request(self.scope["url_route"]["kwargs"]["room_name"])
 			usr = get_volunteer(self.scope["user"].pk)
 
-			return (request.volunteer == None or request.volunteer == usr)
+			return request.volunteer == usr
 		except Exception:
 			return False
 
@@ -51,6 +51,38 @@ class VolunteerValidated(BasePermission):
 			return False
 
 
+
+class IsVolunteer(BasePermission):
+
+	def has_permission(self, *args, **kwargs) -> bool:
+		try:
+			user = get_volunteer(self.scope["user"].pk)
+			return isinstance(user, Volunteer)
+		except Exception:
+			return False
+
+
+class isSpecialNeeds(BasePermission):
+
+	def has_permission(self, *args, **kwargs) -> bool:
+		try:
+			user = get_specialneed(self.scope["user"].pk)
+			return isinstance(user,SpecialNeed)
+		except Exception:
+			return False
+
+
+class OwnsRequest(BasePermission):
+
+	def has_permission(self, *args, **kwargs) -> bool:
+		try:
+			req = get_request(self.scope["url_route"]["kwargs"]["room_name"])
+
+			return req.specialNeeds.pk == self.scope["user"].pk
+		except Exception:
+			return False
+
+
 def get_request(pk) -> Request:
 	try:
 		return Request.objects.get(id=pk)
@@ -58,11 +90,18 @@ def get_request(pk) -> Request:
 	except Request.DoesNotExist:
 		raise Request.DoesNotExist
 
-
 def get_volunteer(pk) -> Volunteer:
 	try:
 		return Volunteer.objects.get(id=pk)
 	except Volunteer.DoesNotExist:
 		raise Volunteer.DoesNotExist
 	except Exception:
-		raise RuntimeError("Can't resolve KeyWord user")
+		raise RuntimeError()
+
+def get_specialneed(pk) -> Volunteer:
+	try:
+		return SpecialNeed.objects.get(id=pk)
+	except SpecialNeed.DoesNotExist:
+		raise SpecialNeed.DoesNotExist
+	except Exception:
+		raise RuntimeError()

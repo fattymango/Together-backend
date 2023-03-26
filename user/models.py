@@ -6,7 +6,7 @@ from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
 import pandas
 from user.signals import receiver_with_multiple_senders
-
+from .tasks import send_verification_email_task
 
 def validate_justID(justID):
 	data = pandas.read_excel(r'user/static/justIDs.xlsx')
@@ -48,13 +48,13 @@ class MyUserManager(BaseUserManager):
 		return user
 
 
-class BasicUser(AbstractBaseUser):
+class BaseUser(AbstractBaseUser):
 	GENDER_CHOICES = (('M', 'Male'), ('F', 'Female'),)
 	email = models.EmailField(verbose_name='email address', max_length=255, unique=True, )
 	justID = models.PositiveIntegerField(verbose_name="university ID", unique=True, blank=False, null=False)
 	full_name = models.CharField(verbose_name="full name", max_length=100)
 	gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-	is_active = models.BooleanField(default=True)
+	is_active = models.BooleanField(default=False)
 	is_admin = models.BooleanField(default=False)
 	is_online = models.BooleanField(default=False)
 
@@ -83,21 +83,28 @@ class BasicUser(AbstractBaseUser):
 		return self.is_admin
 
 
-class SpecialNeed(BasicUser):
+class SpecialNeed(BaseUser):
 	DISABILITY_CHOICES = (('M', 'Movement'), ('V', 'Visual'), ('E', 'Else'))
 
 	disability_type = models.CharField(verbose_name="type of disability", max_length=1, choices=DISABILITY_CHOICES)
 
 
-class Volunteer(BasicUser):
+class Volunteer(BaseUser):
 	is_validated = models.BooleanField(verbose_name="is the user valid to volunteer", default=False)
 
 
-class Admin(BasicUser):
+class Admin(BaseUser):
 	pass
 
 
-@receiver_with_multiple_senders(post_save, senders=[BasicUser, Volunteer, SpecialNeed, Admin])
+@receiver_with_multiple_senders(post_save, senders=[BaseUser, Volunteer, SpecialNeed, Admin])
 def create_auth_token(sender, instance=None, created=False, **kwargs):
 	if created:
 		Token.objects.create(user=instance)
+
+
+@receiver_with_multiple_senders(post_save, senders=[BaseUser, Volunteer, SpecialNeed, Admin])
+def send_verification_email(sender, instance=None, created=False, **kwargs):
+	if created:
+		return send_verification_email_task.delay(instance.pk,instance.justID,instance.email)
+
