@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import *
-from .util import *
+from .util import validate_justID, validate_specialneed
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -9,7 +9,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = BaseUser
-		fields = ['email', 'justID', 'password', 'password2']
+		fields = ['justID', 'password', 'password2']
 		extra_kwargs = {
 			'password': {'write_only': True},
 		}
@@ -19,24 +19,23 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 		justID = attrs['justID']
 		if not validate_justID(justID):
 			raise serializers.ValidationError({'justID': 'That justID is not valid.'})
-		email = attrs['email']
-		if not ".just.edu.jo" in email:
-			raise serializers.ValidationError({'email': 'That email is not a valid JUST email.'})
+
 		return attrs
 
 	def save(self):
-
-		user = self.Meta.model(email=self.validated_data['email'], justID=self.validated_data['justID'])
+		justID = self.validated_data['justID']
+		user = self.Meta.model.objects.create(justID=justID)
 		password = self.validated_data['password']
 		password2 = self.validated_data['password2']
 		if password != password2:
 			raise serializers.ValidationError({'password': 'Passwords must match.'})
 		user.set_password(password)
+
 		user.save()
 		return user
 
 
-fields = ['email', 'justID', 'password', 'password2']
+fields = ['justID', 'password', 'password2']
 extra_kwargs = {
 	'password': {'write_only': True},
 }
@@ -48,6 +47,12 @@ class SpecialNeedsRegistrationSerializer(UserRegistrationSerializer):
 		fields = fields
 		extra_kwargs = extra_kwargs
 
+	def validate(self, attrs):
+		justID = attrs['justID']
+		if not validate_specialneed(justID):
+			raise serializers.ValidationError({'justID': 'That justID is not a valid special needs student.'})
+
+		return attrs
 
 class VolunteerRegistrationSerializer(UserRegistrationSerializer):
 	class Meta:

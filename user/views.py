@@ -12,6 +12,9 @@ from .serializers import *
 from .token import account_activation_token
 from .util import *
 from django.utils.encoding import force_str
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UserRegistration(APIView):
@@ -26,7 +29,7 @@ class UserRegistration(APIView):
 		serializer = self.serializer(data=request.data)
 		if serializer.is_valid(raise_exception=True):
 			user = serializer.save()
-			serialize_user(data, user)
+			data = serialize_user(user)
 		else:
 			data = serializer.errors
 		return Response(data)
@@ -62,7 +65,6 @@ class UserLogin(APIView):
 
 		return Response(context)
 
-
 class SetUserOnline(APIView):
 	authentication_classes = [TokenAuthentication]
 	permission_classes = [IsAuthenticated]
@@ -96,7 +98,6 @@ class ActivateUser(APIView):
 		User = get_user_model()
 		uidb64 = kwargs.get("uidb64")
 		token = kwargs.get("token")
-		print(args, kwargs)
 		try:
 			uid = force_str(urlsafe_base64_decode(uidb64))
 			user = User.objects.get(pk=uid)
@@ -108,3 +109,24 @@ class ActivateUser(APIView):
 			return HttpResponse('Thank you for your email confirmation. Now you can login your account.')
 		else:
 			return HttpResponse('Activation link is invalid!')
+
+
+class ValidateVolunteer(APIView):
+	authentication_classes = []
+	permission_classes = []
+
+	def get(request, *args, **kwargs):
+		User = Volunteer
+		uidb64 = kwargs.get("uidb64")
+
+		try:
+			uid = force_str(urlsafe_base64_decode(uidb64))
+			user = User.objects.get(pk=uid)
+		except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+			user = None
+		if user is not None:
+			user.is_validated = True
+			user.save()
+			return HttpResponse('User is Valid now.')
+		else:
+			return HttpResponse('Validation link is invalid!')

@@ -16,7 +16,7 @@ class BaseUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields' : ('email', 'justID', 'password1', 'password2'),
+            'fields' : ('justID', 'password1', 'password2'),
         }),
     )
     list_display = ('email', 'justID')
@@ -24,7 +24,7 @@ class BaseUserAdmin(UserAdmin):
     ordering = None
     filter_horizontal=()
     list_filter=()
-    fieldsets=()
+
 
 class SpecialNeedAdmin(BaseUserAdmin):
     fieldsets = (

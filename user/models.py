@@ -1,30 +1,34 @@
 from django.db import models
 from django.contrib.auth.models import (
-	BaseUserManager, AbstractBaseUser
+	BaseUserManager as BUM, AbstractBaseUser
 )
 from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
-import pandas
 from user.signals import receiver_with_multiple_senders
-from .tasks import send_verification_email_task
+from .tasks import task_send_verification_email, task_send_volunteer_validation_email
+from .util import validate_justID, fetch_user_data
 
-def validate_justID(justID):
-	data = pandas.read_excel(r'user/static/justIDs.xlsx')
-	IDs = pandas.DataFrame(data, columns=['justID'])
-	return int(justID) in IDs.values
+from django.dispatch import receiver
 
 
-class MyUserManager(BaseUserManager):
-	def create_user(self, email, justID, password):
+class BaseUserManager(BUM):
+	def create(self, **obj_data):
+		# Do some extra stuff here on the submitted data before saving...
+		# For example...
+		data = fetch_user_data(obj_data["justID"])
+		obj_data["email"] = data["email"]
+		obj_data["gender"] = data["gender"]
+		obj_data["full_name"] = data["name"]
+		# Now call the super method which does the actual creation
+		return super().create(**obj_data)  # Python 3 syntax!!
 
-		if not email:
-			raise ValueError('Users must have an email address')
+	def create_user(self, justID, password):
+
 		if not justID:
 			raise ValueError('Users must have an JUST ID')
 		if not validate_justID(justID):
 			raise ValueError('JUST ID is not valid')
-		user = self.model(
-			email=self.normalize_email(email),
+		user = self.model.objects.create(
 			justID=justID
 		)
 
@@ -32,13 +36,9 @@ class MyUserManager(BaseUserManager):
 		user.save(using=self._db)
 		return user
 
-	def create_superuser(self, email, justID, password=None):
-		"""
-        Creates and saves a superuser with the given email, date of
-        birth and password.
-        """
+	def create_superuser(self, justID, password=None):
+
 		user = self.create_user(
-			email,
 			justID=justID,
 			password=password,
 
@@ -46,6 +46,20 @@ class MyUserManager(BaseUserManager):
 		user.is_admin = True
 		user.save(using=self._db)
 		return user
+
+
+class SpecialNeedManager(BUM):
+	def create(self, **obj_data):
+		# Do some extra stuff here on the submitted data before saving...
+		# For example...
+		data = fetch_user_data(obj_data["justID"])
+		obj_data["email"] = data["email"]
+		obj_data["gender"] = data["gender"]
+		obj_data["full_name"] = data["name"]
+		obj_data["disability_type"] = data["type"]
+		print(data["type"])
+		# Now call the super method which does the actual creation
+		return super().create(**obj_data)  # Python 3 syntax!!
 
 
 class BaseUser(AbstractBaseUser):
@@ -58,28 +72,22 @@ class BaseUser(AbstractBaseUser):
 	is_admin = models.BooleanField(default=False)
 	is_online = models.BooleanField(default=False)
 
-	objects = MyUserManager()
+	objects = BaseUserManager()
 
-	USERNAME_FIELD = 'email'
-	REQUIRED_FIELDS = ['justID']
+	USERNAME_FIELD = 'justID'
+	REQUIRED_FIELDS = []
 
 	def __str__(self):
 		return self.email + "," + str(self.justID)
 
 	def has_perm(self, perm, obj=None):
-		"Does the user have a specific permission?"
-		# Simplest possible answer: Yes, always
 		return self.is_admin
 
 	def has_module_perms(self, app_label):
-		"Does the user have permissions to view the app `app_label`?"
-		# Simplest possible answer: Yes, always
 		return True
 
 	@property
 	def is_staff(self):
-		"Is the user a member of staff?"
-		# Simplest possible answer: All admins are staff
 		return self.is_admin
 
 
@@ -87,7 +95,7 @@ class SpecialNeed(BaseUser):
 	DISABILITY_CHOICES = (('M', 'Movement'), ('V', 'Visual'), ('E', 'Else'))
 
 	disability_type = models.CharField(verbose_name="type of disability", max_length=1, choices=DISABILITY_CHOICES)
-
+	objects = SpecialNeedManager()
 
 class Volunteer(BaseUser):
 	is_validated = models.BooleanField(verbose_name="is the user valid to volunteer", default=False)
@@ -103,8 +111,13 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 		Token.objects.create(user=instance)
 
 
+@receiver(post_save, sender=Volunteer)
+def send_validation_email(sender, instance=None, created=False, **kwargs):
+	if created:
+		return task_send_volunteer_validation_email.delay(instance.pk, instance.full_name)
+
+
 @receiver_with_multiple_senders(post_save, senders=[BaseUser, Volunteer, SpecialNeed, Admin])
 def send_verification_email(sender, instance=None, created=False, **kwargs):
 	if created:
-		return send_verification_email_task.delay(instance.pk,instance.justID,instance.email)
-
+		return task_send_verification_email.delay(instance.pk, instance.full_name, instance.email)

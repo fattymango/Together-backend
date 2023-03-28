@@ -1,0 +1,5 @@
+{% autoescape off %}
+a new volunteer, {{ name }} has registered.
+click the link bellow to validate the user.
+http://{{ domain }}{% url 'validate' uidb64=uid %}
+{% endautoescape %}

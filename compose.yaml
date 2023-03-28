@@ -65,12 +65,14 @@ services:
     build: .
     command: celery -A server worker -l INFO --concurrency 3 -E
     volumes:
-        - .:/code
+      - .:/code
     environment:
-        - DEBUG=1
-        # - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - DEBUG=1
+      # - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+    env_file:
+      - ".env"
     networks:
-        - backend
+      - backend
     depends_on:
       - django
       - redis-broker
