@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.cache import cache
 from django.http import HttpResponse
 from django.utils.http import urlsafe_base64_decode
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -6,7 +8,12 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework.authentication import TokenAuthentication
 
 from rest_framework.views import APIView
+from rest_framework.generics import UpdateAPIView
 from rest_framework.response import Response
+
+from location.permissions import IsVolunteer, IsSpecialNeeds
+from report.permissions import IsAdmin
+from request.util import get_volunteer_is_available, set_volunteer_is_available
 from .serializers import *
 
 from .token import account_activation_token
@@ -65,29 +72,59 @@ class UserLogin(APIView):
 
 		return Response(context)
 
+
 class SetUserOnline(APIView):
 	authentication_classes = [TokenAuthentication]
-	permission_classes = [IsAuthenticated]
+	permission_classes = []
+	prefix = None
 
+	def delete_location(self, user):
+		key = self.prefix.replace("*", (str(user.justID)))
+		cache.delete(key)
+
+	def set_online(self, user, is_online):
+		user.is_online = is_online
+		user.save()
+
+	def get_user(self,request):
+		return Token.objects.get(key=request.auth.key).user
+	def get_is_online(self,request):
+		return True if (request.data.get('is_online') == "true") else False
 	def put(self, request):
 		context = {}
-		user = Token.objects.get(key=request.auth.key).user
-		is_online = request.data.get('is_online')
-		if user and is_online:
 
-			user.is_online = True if (is_online == "true") else False
-			user.save()
-			serialize_user(context, user)
+		try:
+			user = self.get_user(request)
+			is_online = self.get_is_online(request)
+
+			self.delete_location(user)
+			self.set_online(user, is_online)
+
+			context = serialize_user(user)
 			context['response'] = 'successfully changed status'
 			context["is_online"] = user.is_online
-		elif not is_online:
-			context['response'] = 'Error'
-			context['error_message'] = 'You must provide a value'
-		else:
+
+		except Exception as e:
 			context['response'] = 'Error'
 			context['error_message'] = 'Invalid credentials'
 
 		return Response(context)
+
+
+class SetVolunteerOnline(SetUserOnline):
+	permission_classes = [IsAuthenticated, IsVolunteer]
+	prefix = settings.CACHE_PREFIXES["LOCATION"]["VOLUNTEER"]
+	def set_available(self,justID,value):
+		set_volunteer_is_available(justID,value)
+
+	def put(self, request):
+		user = self.get_user(request)
+		is_online = self.get_is_online(request)
+		self.set_available(user.justID,is_online)
+		return super().put(request)
+class SetSpecialNeedsLocation(SetUserOnline):
+	permission_classes = [IsAuthenticated, IsSpecialNeeds]
+	prefix = settings.CACHE_PREFIXES["LOCATION"]["SPECIALNEEDS"]
 
 
 class ActivateUser(APIView):
@@ -111,22 +148,8 @@ class ActivateUser(APIView):
 			return HttpResponse('Activation link is invalid!')
 
 
-class ValidateVolunteer(APIView):
-	authentication_classes = []
-	permission_classes = []
-
-	def get(request, *args, **kwargs):
-		User = Volunteer
-		uidb64 = kwargs.get("uidb64")
-
-		try:
-			uid = force_str(urlsafe_base64_decode(uidb64))
-			user = User.objects.get(pk=uid)
-		except(TypeError, ValueError, OverflowError, User.DoesNotExist):
-			user = None
-		if user is not None:
-			user.is_validated = True
-			user.save()
-			return HttpResponse('User is Valid now.')
-		else:
-			return HttpResponse('Validation link is invalid!')
+class ValidateVolunteer(UpdateAPIView):
+	queryset = Volunteer.objects.all()
+	serializer_class = UpdateVolunteerSerializer
+	permission_classes = [IsAuthenticated, IsAdmin]
+	authentication_classes = [TokenAuthentication]

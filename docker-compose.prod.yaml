@@ -1,0 +1,104 @@
+services:
+  # Redis for caching #
+  redis-master:
+    image: redis:latest
+    expose:
+      - "${ENV_REDIS_MASTER_PORT}"
+    volumes:
+      - broker-data:/data
+    networks:
+      - backend
+
+
+  redis-slave:
+    image: redis:latest
+    command: redis-server --port ${ENV_REDIS_SLAVE_PORT} --slaveof redis-master ${ENV_REDIS_MASTER_PORT}
+    expose:
+      - "${ENV_REDIS_SLAVE_PORT}"
+    volumes:
+      - broker-data:/data
+    depends_on:
+      - redis-master
+    networks:
+      - backend
+
+
+# Redis/Rabbitmq for msg queue #
+  redis-broker:
+    image: "redis:latest"
+    command: redis-server --port ${ENV_REDIS_BROKER_PORT}
+    networks:
+      - backend
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+    expose:
+      - "${ENV_POSTGRES_PORT}"
+
+    volumes:
+      - pgdata:/var/lib/postgres/data
+    networks:
+      - backend
+
+  django:
+    build:
+      context: .
+      dockerfile: prod/dockerfile
+    container_name: django
+    command:  gunicorn server.wsgi:application --bind 0.0.0.0:8000
+# daphne -b 0.0.0.0 -p 8001 server.asgi:application 
+# &&gunicorn server.wsgi:application --bind 0.0.0.0:8000"
+    expose:
+      - 8000
+      - 8001
+    env_file:
+      - ".env"
+    volumes:
+      - .:/code
+      - static_volume:/home/app/django/staticfiles
+
+    networks:
+      - backend
+    depends_on:
+      - redis-master
+      - db
+
+  celery:
+    build:
+      context: .
+      dockerfile: prod/dockerfile
+    command: celery -A server worker -l INFO --concurrency 3 -E
+    volumes:
+      - .:/code
+
+    env_file:
+      - ".env"
+    networks:
+      - backend
+    depends_on:
+      - django
+      - redis-broker
+  
+  nginx:
+    build: ./nginx
+    ports:
+      - 80:80
+    depends_on:
+      - django
+    volumes:
+      - static_volume:/home/app/django/staticfiles
+
+    networks:
+      - backend  
+      
+volumes:
+  pgdata:
+  broker-data:
+  static_volume:
+
+networks:
+  backend:

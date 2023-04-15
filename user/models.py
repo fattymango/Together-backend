@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import (
-	BaseUserManager as BUM, AbstractBaseUser
+	BaseUserManager, AbstractBaseUser
 )
 from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
@@ -11,7 +11,7 @@ from .util import validate_justID, fetch_user_data
 from django.dispatch import receiver
 
 
-class BaseUserManager(BUM):
+class MyBaseUserManager(BaseUserManager):
 	def create(self, **obj_data):
 		# Do some extra stuff here on the submitted data before saving...
 		# For example...
@@ -48,7 +48,7 @@ class BaseUserManager(BUM):
 		return user
 
 
-class SpecialNeedManager(BUM):
+class SpecialNeedManager(BaseUserManager):
 	def create(self, **obj_data):
 		# Do some extra stuff here on the submitted data before saving...
 		# For example...
@@ -57,13 +57,13 @@ class SpecialNeedManager(BUM):
 		obj_data["gender"] = data["gender"]
 		obj_data["full_name"] = data["name"]
 		obj_data["disability_type"] = data["type"]
-		print(data["type"])
+
 		# Now call the super method which does the actual creation
 		return super().create(**obj_data)  # Python 3 syntax!!
 
-
+GENDER_CHOICES = (('M', 'Male'), ('F', 'Female'),)
 class BaseUser(AbstractBaseUser):
-	GENDER_CHOICES = (('M', 'Male'), ('F', 'Female'),)
+
 	email = models.EmailField(verbose_name='email address', max_length=255, unique=True, )
 	justID = models.PositiveIntegerField(verbose_name="university ID", unique=True, blank=False, null=False)
 	full_name = models.CharField(verbose_name="full name", max_length=100)
@@ -71,8 +71,8 @@ class BaseUser(AbstractBaseUser):
 	is_active = models.BooleanField(default=False)
 	is_admin = models.BooleanField(default=False)
 	is_online = models.BooleanField(default=False)
-
-	objects = BaseUserManager()
+	is_just_admin = models.BooleanField(default=False)
+	objects = MyBaseUserManager()
 
 	USERNAME_FIELD = 'justID'
 	REQUIRED_FIELDS = []
@@ -101,11 +101,9 @@ class Volunteer(BaseUser):
 	is_validated = models.BooleanField(verbose_name="is the user valid to volunteer", default=False)
 
 
-class Admin(BaseUser):
-	pass
 
 
-@receiver_with_multiple_senders(post_save, senders=[BaseUser, Volunteer, SpecialNeed, Admin])
+@receiver_with_multiple_senders(post_save, senders=[BaseUser, Volunteer, SpecialNeed])
 def create_auth_token(sender, instance=None, created=False, **kwargs):
 	if created:
 		Token.objects.create(user=instance)
@@ -117,7 +115,7 @@ def send_validation_email(sender, instance=None, created=False, **kwargs):
 		return task_send_volunteer_validation_email.delay(instance.pk, instance.full_name)
 
 
-@receiver_with_multiple_senders(post_save, senders=[BaseUser, Volunteer, SpecialNeed, Admin])
+@receiver_with_multiple_senders(post_save, senders=[BaseUser, Volunteer, SpecialNeed])
 def send_verification_email(sender, instance=None, created=False, **kwargs):
 	if created:
 		return task_send_verification_email.delay(instance.pk, instance.full_name, instance.email)

@@ -1,9 +1,12 @@
+import logging
+
 from django.contrib.auth.models import AnonymousUser
 
+from chat.models import ChatRoom
 from request.models import Request
 from user.models import Volunteer,SpecialNeed
 
-
+logger = logging.getLogger(__name__)
 class BasePermission(object):
 	def __init__(self, scope, *args, **kwargs) -> None:
 		self.scope = scope
@@ -62,7 +65,7 @@ class IsVolunteer(BasePermission):
 			return False
 
 
-class isSpecialNeeds(BasePermission):
+class IsSpecialNeeds(BasePermission):
 
 	def has_permission(self, *args, **kwargs) -> bool:
 		try:
@@ -82,6 +85,27 @@ class OwnsRequest(BasePermission):
 		except Exception:
 			return False
 
+
+
+
+class CanAccessChatRoom(BasePermission):
+
+	def has_permission(self, *args, **kwargs) -> bool:
+		try:
+			chat_room = get_chat_room(self.scope["url_route"]["kwargs"]["room_name"])
+			logger.error(chat_room)
+			user = self.scope["user"]
+			return chat_room.specialNeeds == user or chat_room.volunteer == user
+		except Exception:
+			return False
+
+def get_chat_room(pk)->ChatRoom:
+	try:
+		return ChatRoom.objects.get(request=pk)
+
+	except ChatRoom.DoesNotExist:
+		logger.error("a7a")
+		raise ChatRoom.DoesNotExist
 
 def get_request(pk) -> Request:
 	try:

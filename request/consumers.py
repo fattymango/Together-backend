@@ -27,18 +27,18 @@ class RequestConsumer(Permissions, JsonWebsocketConsumer):
 
 	# Receive message from WebSocket
 	def receive_json(self, content, **kwargs):
-		message = content["message"]
+		data = content["data"]
 		# Send message to room group
 		async_to_sync(self.channel_layer.group_send)(
-			self.room_group_name, {"type": "chat_message", "message": message, "user": self.scope["user"].email}
+			self.room_group_name, {"type": "chat_message", "data": data, "user": self.scope["user"].email}
 		)
 
 	# Receive message from room group
 	def chat_message(self, event):
-		message = event["message"]
+		data = event["data"]
 
 		# Send message to WebSocket
-		self.send_json(content={"message": message, "user": event["user"]})
+		self.send_json(content={"data": data})
 
 
 class VolunteerRequestConsumer(RequestConsumer):
@@ -46,4 +46,4 @@ class VolunteerRequestConsumer(RequestConsumer):
 
 
 class SpecialNeedsRequestConsumer(RequestConsumer):
-	permission_classes = [NotAnonymousUser,isSpecialNeeds, OwnsRequest]
+	permission_classes = [NotAnonymousUser, IsSpecialNeeds, OwnsRequest]

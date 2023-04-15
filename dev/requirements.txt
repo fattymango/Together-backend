@@ -12,3 +12,6 @@ django-cors-headers==3.14.0
 celery
 django-redis
 six
+geopy
+gunicorn
+channels-redis

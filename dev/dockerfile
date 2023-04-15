@@ -2,10 +2,12 @@ FROM python:3.10-alpine
 
 WORKDIR /code
 
-COPY requirements.txt /code
+COPY dev/requirements.txt /code
 
 RUN pip3 install -r requirements.txt --no-cache-dir
 RUN pip3 install channels-redis
+
+
 RUN apk add --no-cache libstdc++
 COPY . /code
 VOLUME /app/demoo/${MEDIA_URL}

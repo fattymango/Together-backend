@@ -6,7 +6,7 @@ from .models import Request
 class RequestSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Request
-		fields = ['id', 'specialNeeds', 'location', 'help_type', 'is_finished']
+		fields = ['id', 'specialNeeds', 'location', 'help_type', "gender", 'is_finished']
 
 
 class UpdateRequestSerializer(RequestSerializer):
@@ -17,4 +17,5 @@ class UpdateRequestSerializer(RequestSerializer):
 			'specialNeeds': {'read_only': True},
 			'location'    : {'read_only': True},
 			'help_type'   : {'read_only': True},
+			'gender'      : {'read_only': True},
 		}

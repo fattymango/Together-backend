@@ -1,11 +1,21 @@
+import logging
+
+from django.conf import settings
+from django.core.cache import cache
 from rest_framework import generics, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
+
+from .models import clean_fields
 from .serializers import RequestSerializer, UpdateRequestSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.sites.shortcuts import get_current_site
 from .permissions import *
+from .util import send_request_consumer_message, set_volunteer_is_available
+from .tasks import task_send_request
+
+logger = logging.getLogger(__name__)
 
 
 # Create your views here.
@@ -37,19 +47,32 @@ class CreateRequest(generics.CreateAPIView):
 class AcceptRequest(generics.UpdateAPIView):
 	queryset = Request.objects.all()
 	serializer_class = UpdateRequestSerializer
-	permission_classes = [IsAuthenticated, CanAssignRequestPermission, RequestNotFinished]
+	permission_classes = [IsAuthenticated, CanAcceptRequestPermission, RequestNotFinished]
 	authentication_classes = [TokenAuthentication]
 
 	def put(self, request, *args, **kwargs):
 		return self.patch(request, *args, **kwargs)
 
 	def patch(self, request, *args, **kwargs):
+		volunteer = request.user
+		request_pk = kwargs.get('pk')
+		volunteer_location = cache.get(
+			settings.CACHE_PREFIXES["LOCATION"]["VOLUNTEER"].replace("*", str(volunteer.justID)))
+
 		try:
-			request.data.update({'volunteer': request.user.pk})
+			request.data.update({'volunteer': volunteer.pk})
 		except AttributeError:
 			request.data._mutable = True
-			request.data.update({'volunteer': request.user.pk})
+			request.data.update({'volunteer': volunteer.pk})
 
+		data = {"status"        : "Volunteer has accepted the request",
+		        "volunteer_name": volunteer.full_name, }
+		if volunteer_location:
+			data["location"] = {"latitude" : volunteer_location[0],
+			                    "longitude": volunteer_location[1]}
+
+		send_request_consumer_message(request_pk, data)
+		set_volunteer_is_available(volunteer.justID, False)
 		return self.partial_update(request, *args, **kwargs)
 
 
@@ -62,7 +85,13 @@ class CancelRequest(AcceptRequest):
 		except AttributeError:
 			request.data._mutable = True
 			request.data.update({'volunteer': None})
+		volunteer = request.user
+		request_pk = kwargs.get('pk')
 
+		serialized_request = clean_fields(Request.objects.get(id=request_pk), fields=["_state", "date_created", "is_finished"])
+		send_request_consumer_message(request_pk, "User has cancelled the request, waiting for a new volunteer")
+		task_send_request.delay(serialized_request)
+		set_volunteer_is_available(volunteer.justID, True)
 		return self.partial_update(request, *args, **kwargs)
 
 
@@ -75,5 +104,5 @@ class FinishRequest(AcceptRequest):
 		except AttributeError:
 			request.data._mutable = True
 			request.data.update({'is_finished': True})
-
+		send_request_consumer_message(kwargs.get('pk'), "Request has been finished.")
 		return self.partial_update(request, *args, **kwargs)

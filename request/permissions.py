@@ -4,7 +4,7 @@ from user.models import SpecialNeed, Volunteer
 from .models import Request
 
 
-class CanAssignRequestPermission(permissions.BasePermission):
+class CanAcceptRequestPermission(permissions.BasePermission):
 	message = 'You cannot accept this request.'
 
 	def has_permission(self, request, view):

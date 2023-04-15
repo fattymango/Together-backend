@@ -2,8 +2,8 @@ services:
   # Redis for caching #
   redis-master:
     image: redis:latest
-    ports:
-      - "${ENV_REDIS_MASTER_PORT}:${ENV_REDIS_MASTER_PORT}"
+    expose:
+      - "${ENV_REDIS_MASTER_PORT}"
     volumes:
       - broker-data:/data
     networks:
@@ -13,8 +13,8 @@ services:
   redis-slave:
     image: redis:latest
     command: redis-server --port ${ENV_REDIS_SLAVE_PORT} --slaveof redis-master ${ENV_REDIS_MASTER_PORT}
-    ports:
-      - "${ENV_REDIS_SLAVE_PORT}:${ENV_REDIS_SLAVE_PORT}"
+    expose:
+      - "${ENV_REDIS_SLAVE_PORT}"
     volumes:
       - broker-data:/data
     depends_on:
@@ -36,25 +36,27 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "${ENV_POSTGRES_PORT}:${ENV_POSTGRES_PORT}"
+    expose:
+      - "${ENV_POSTGRES_PORT}"
+
     volumes:
       - pgdata:/var/lib/postgres/data
     networks:
       - backend
 
   django:
-    build: .
+    build:
+      context: .
+      dockerfile: dev/dockerfile
     container_name: django
+    
     ports:
       - "${ENV_DJANGO_PORT}:${ENV_DJANGO_PORT}"
     env_file:
       - ".env"
     volumes:
       - .:/code
-      - media:/app/demoo/${MEDIA_URL}
-#    links:
-#      - db:db
+
     networks:
       - backend
     depends_on:
@@ -62,7 +64,9 @@ services:
       - db
 
   celery:
-    build: .
+    build:
+      context: .
+      dockerfile: dev/dockerfile
     command: celery -A server worker -l INFO --concurrency 3 -E
     volumes:
       - .:/code
@@ -77,7 +81,6 @@ services:
       - django
       - redis-broker
 volumes:
-  media: {}
   pgdata:
   broker-data:
 

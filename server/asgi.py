@@ -12,12 +12,26 @@ import os
 from channels.routing import ProtocolTypeRouter
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server.settings')
 # Initialize Django ASGI application early to ensure the AppRegistry
 # is populated before importing code that may import ORM models.
 django_asgi_app = get_asgi_application()
+from channels.security.websocket import AllowedHostsOriginValidator
+from channels.routing import ProtocolTypeRouter, URLRouter
+import request.routing
+import user.routing
+import chat.routing
+from django.core.asgi import get_asgi_application
+from request.middlewares import TokenAuthMiddleWare
+
 
 application = ProtocolTypeRouter({
-    "http": django_asgi_app,
-    # Just HTTP for now. (We can add other protocols later.)
-})
+    "http": get_asgi_application(),
+    'websocket': TokenAuthMiddleWare(
+                
+                    URLRouter(
+                        request.routing.websocket_urlpatterns +
+                        user.routing.websocket_urlpatterns +
+                        chat.routing.websocket_urlpatterns
+                    )
+    )})

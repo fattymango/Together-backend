@@ -26,13 +26,13 @@ AUTHENTICATION_BACKENDS = (
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-z_(@+3l0nzt84a0o@tbt9k$owqvuo5toswg=hklolutt0-u_dh'
+# SECRET_KEY = 'django-insecure-z_(@+3l0nzt84a0o@tbt9k$owqvuo5toswg=hklolutt0-u_dh'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(int(os.getenv("ENV_DEBUG", 1)))
+DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+CSRF_TRUSTED_ORIGINS = ['http://localhost:1337']
 # Application definition
 
 INSTALLED_APPS = [
@@ -49,6 +49,10 @@ INSTALLED_APPS = [
 	'user',
 	'request',
 	'channels_permissions',
+	'location',
+	'chat',
+	'report',
+	'myadmin'
 ]
 
 MIDDLEWARE = [
@@ -100,11 +104,14 @@ DATABASES = {
 		"HOST"    : "db",  # set in docker-compose.yml
 		"PORT"    : os.getenv("ENV_POSTGRES_PORT", 5432),  # default postgres port
 	}
+
 }
+REDIS_HOST_PRIMARY = "redis://redis-master:" + os.getenv("ENV_REDIS_PORT", "6379")
+
 CACHES = {
 	"default": {
 		"BACKEND"   : "django_redis.cache.RedisCache",
-		"LOCATION"  : ["redis://redis-master:6379",
+		"LOCATION"  : [REDIS_HOST_PRIMARY,
 		               "redis://redis-slave:6380"
 		               ],
 
@@ -115,13 +122,26 @@ CACHES = {
 	}
 }
 
-ASGI_APPLICATION = "server.routing.application"
-redis_host = "redis://redis-master:" + os.getenv("ENV_REDIS_PORT", "6379")
+CACHE_PREFIXES = {
+	"REQUEST"  : {
+		"STATUS": "request_status_*"
+	},
+	"LOCATION" : {
+		"VOLUNTEER"   : "location_volunteer_*",
+		"SPECIALNEEDS": "location_specialneeds_*",
+	},
+	"VOLUNTEER": {
+		"STATUS": "volunteer_status_*"
+	}
+}
+
+ASGI_APPLICATION = "server.asgi.application"
+
 CHANNEL_LAYERS = {
 	"default": {
 		"BACKEND": "channels_redis.core.RedisChannelLayer",
 		"CONFIG" : {
-			"hosts": [redis_host],
+			"hosts": [REDIS_HOST_PRIMARY],
 		},
 	},
 }
@@ -166,8 +186,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
-
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -176,6 +196,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis-broker:6381")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://redis-master:6379")
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
