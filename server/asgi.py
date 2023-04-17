@@ -26,7 +26,7 @@ from request.middlewares import TokenAuthMiddleWare
 
 
 application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
+    # "http": get_asgi_application(),
     'websocket': TokenAuthMiddleWare(
                 
                     URLRouter(

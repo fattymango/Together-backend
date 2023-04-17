@@ -71,6 +71,7 @@ class UpdateVolunteerSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Volunteer
 		fields = ['is_validated']
+		
 def get_serializer(model, data):
 	if model == SpecialNeed:
 		return SpecialNeedsRegistrationSerializer(data=data)

@@ -86,6 +86,7 @@ TEMPLATES = [
 	},
 ]
 
+ASGI_APPLICATION = "server.asgi.application"
 WSGI_APPLICATION = 'server.wsgi.application'
 
 # Database
@@ -135,7 +136,7 @@ CACHE_PREFIXES = {
 	}
 }
 
-ASGI_APPLICATION = "server.asgi.application"
+
 
 CHANNEL_LAYERS = {
 	"default": {
@@ -206,3 +207,8 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+# SECURE_SSL_REDIRECT = True
+# SECURE_HSTS_SECONDS = 0

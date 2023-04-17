@@ -10,7 +10,7 @@ class Permissions(object):
 		try:
 			for permission in self.permission_classes:
 				if permission(scope=self.scope).validate() != None:
-					logger.error(type(permission(scope=self.scope)))
+					# logger.error(type(permission(scope=self.scope)))
 					raise DenyConnection
 		except PermissionError:
 			raise DenyConnection

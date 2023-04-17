@@ -43,24 +43,70 @@ services:
       - pgdata:/var/lib/postgres/data
     networks:
       - backend
+# django:
+#     build:
+#       context: .
+#       dockerfile: prod/dockerfile
+#     container_name: django
+#     command:  gunicorn $PROJECT_NAME.wsgi:application --bind $GUNICORN_IP:$GUNICORN_PORT
+# # daphne -b $DAPHNE_IP -p $DAPHNE_PORT $PROJECT_NAME.asgi:application 
 
-  django:
+#     expose:
+#       - 8000
+#       - 8001
+#     env_file:
+#       - ".env"
+#     environment:
+#       - CONTAINER=django
+#     volumes:
+#       - .:/code
+#       - static_volume:/home/app/django/staticfiles
+
+#     networks:
+#       - backend
+#     depends_on:
+#       - redis-master
+#       - db
+  gunicorn:
     build:
       context: .
       dockerfile: prod/dockerfile
-    container_name: django
-    command:  gunicorn server.wsgi:application --bind 0.0.0.0:8000
-# daphne -b 0.0.0.0 -p 8001 server.asgi:application 
-# &&gunicorn server.wsgi:application --bind 0.0.0.0:8000"
+    container_name: gunicorn
+    command:  gunicorn $PROJECT_NAME.wsgi:application --bind $GUNICORN_IP:$GUNICORN_PORT
+
     expose:
       - 8000
-      - 8001
     env_file:
       - ".env"
+    environment:
+      - CONTAINER=django
     volumes:
       - .:/code
       - static_volume:/home/app/django/staticfiles
 
+    networks:
+      - backend
+    depends_on:
+      - redis-master
+      - db
+
+
+  daphne:
+    build:
+      context: .
+      dockerfile: prod/dockerfile
+    container_name: daphne
+    command:  daphne -b $DAPHNE_IP -p $DAPHNE_PORT $PROJECT_NAME.asgi:application 
+
+    expose:
+      - 8001
+    env_file:
+      - ".env"
+    environment:
+      - CONTAINER=django
+    volumes:
+      - .:/code
+      - static_volume:/home/app/django/staticfiles
     networks:
       - backend
     depends_on:
@@ -80,7 +126,8 @@ services:
     networks:
       - backend
     depends_on:
-      - django
+      - gunicorn
+      - daphne
       - redis-broker
   
   nginx:
@@ -88,7 +135,8 @@ services:
     ports:
       - 80:80
     depends_on:
-      - django
+      - gunicorn
+      - daphne
     volumes:
       - static_volume:/home/app/django/staticfiles
 

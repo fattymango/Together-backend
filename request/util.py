@@ -87,7 +87,7 @@ def send_request_to_volunteer(request):
 	User = get_user_model()
 	volunteers = get_volunteers_locations()
 	shuffle(volunteers)
-
+	
 	for key in volunteers:
 
 		volunteer_location = cache.get(key)
