@@ -82,7 +82,7 @@ class UserLogin(APIView):
 		password = request.POST.get('password')
 
 		user = authenticate(username=username, password=password)
-		logger.error(user)
+
 		if user:
 			context["user"] = serialize_user(user)
 			context["is_volunteer"] = is_volunteer(user.justID)
