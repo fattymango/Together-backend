@@ -29,7 +29,7 @@ AUTHENTICATION_BACKENDS = (
 # SECRET_KEY = 'django-insecure-z_(@+3l0nzt84a0o@tbt9k$owqvuo5toswg=hklolutt0-u_dh'
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
-DEBUG = int(os.environ.get("DEBUG", default=0))
+DEBUG = int(os.environ.get("DEBUG", default=1))
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 CSRF_TRUSTED_ORIGINS = ['http://localhost:1337']

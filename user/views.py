@@ -54,6 +54,24 @@ class AdminUserRegistration(UserRegistration):
 	serializer = AdminRegistrationSerializer
 
 
+def is_volunteer(justID):
+	User = Volunteer
+	try:
+		User.objects.get(justID=justID)
+		return True
+	except User.DoesNotExist:
+		return False
+
+
+def is_specialneeds(justID):
+	User = SpecialNeed
+	try:
+		User.objects.get(justID=justID)
+		return True
+	except User.DoesNotExist:
+		return False
+
+
 class UserLogin(APIView):
 	authentication_classes = []
 	permission_classes = []
@@ -62,9 +80,13 @@ class UserLogin(APIView):
 		context = {}
 		username = request.POST.get('username')
 		password = request.POST.get('password')
-		user = authenticate(email=username, password=password)
+
+		user = authenticate(username=username, password=password)
+		logger.error(user)
 		if user:
-			serialize_user(context, user)
+			context["user"] = serialize_user(user)
+			context["is_volunteer"] = is_volunteer(user.justID)
+			context["is_specialneed"] = is_specialneeds(user.justID)
 			context['response'] = 'successfully authenticated'
 		else:
 			context['response'] = 'Error'

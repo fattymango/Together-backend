@@ -26,12 +26,12 @@ from request.middlewares import TokenAuthMiddleWare
 
 
 application = ProtocolTypeRouter({
-    # "http": get_asgi_application(),
-    'websocket': TokenAuthMiddleWare(
-                
-                    URLRouter(
-                        request.routing.websocket_urlpatterns +
-                        user.routing.websocket_urlpatterns +
-                        chat.routing.websocket_urlpatterns
-                    )
-    )})
+	"http"     : get_asgi_application(),
+	'websocket': TokenAuthMiddleWare(
+
+		URLRouter(
+			request.routing.websocket_urlpatterns +
+			user.routing.websocket_urlpatterns +
+			chat.routing.websocket_urlpatterns
+		)
+	)})
