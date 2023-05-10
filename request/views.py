@@ -6,13 +6,14 @@ from rest_framework import generics, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
+from user.serializers import BaseUserSerializer
 from .models import clean_fields
 from .serializers import RequestSerializer, UpdateRequestSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.sites.shortcuts import get_current_site
 from .permissions import *
-from .util import send_request_consumer_message, set_volunteer_is_available
+from .util import send_request_consumer_message, set_volunteer_is_available, generate_websocket
 from .tasks import task_send_request
 
 logger = logging.getLogger(__name__)
@@ -29,17 +30,21 @@ class CreateRequest(generics.CreateAPIView):
 		try:
 
 			try:
-				request.data.update({'specialNeeds': request.user.pk})
+				request.data.update({'specialNeeds': request.user.id})
 			except AttributeError:
 				request.data._mutable = True
-				request.data.update({'specialNeeds': request.user.pk})
-
+				request.data.update({'specialNeeds': request.user.id})
+			logger.error(request.user)
 			response = super().create(request, *args, **kwargs)
-
-			response.data["websocket_url"] = ''.join(
-				['ws://', get_current_site(request).domain, "/ws/request/", str(response.data["id"]), "/"])
+			logger.error("hello2")
+			response.data["request_websocket"] = generate_websocket(prefix="ws", view_name="request",
+			                                                        specialneed="specialneed",
+			                                                        request_id=str(response.data["id"]))
+			response.data["chatroom_websocket"] = generate_websocket(prefix="ws", view_name="chatroom",
+			                                                         request_id=str(response.data["id"]))
 			return response
 		except Exception:
+			logging.critical(Exception, exc_info=True)
 			return Response(data={"error": "error has occurred, please make sure the credentials are correct."},
 			                status=status.HTTP_400_BAD_REQUEST)
 
@@ -65,14 +70,16 @@ class AcceptRequest(generics.UpdateAPIView):
 			request.data._mutable = True
 			request.data.update({'volunteer': volunteer.pk})
 
-		data = {"status"        : "Volunteer has accepted the request",
-		        "volunteer_name": volunteer.full_name, }
+		data = {"response"      : "success",
+		        "message"       : "Volunteer has accepted the request",
+		        "volunteer_name": BaseUserSerializer(volunteer), }
 		if volunteer_location:
 			data["location"] = {"latitude" : volunteer_location[0],
 			                    "longitude": volunteer_location[1]}
 
 		send_request_consumer_message(request_pk, data)
 		set_volunteer_is_available(volunteer.justID, False)
+
 		return self.partial_update(request, *args, **kwargs)
 
 

@@ -2,30 +2,29 @@ from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth import authenticate
+from django.utils.encoding import force_str
+
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.contrib.auth import authenticate, get_user_model
-
 from rest_framework.authentication import TokenAuthentication
-
 from rest_framework.views import APIView
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import UpdateAPIView, RetrieveAPIView
 from rest_framework.response import Response
 
 from location.permissions import IsVolunteer, IsSpecialNeeds
 from report.permissions import IsAdmin
-from request.util import get_volunteer_is_available, set_volunteer_is_available
-from .serializers import *
+from request.util import set_volunteer_is_available
 
-from .token import account_activation_token
+from .serializers import *
 from .util import *
-from django.utils.encoding import force_str
+
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class UserRegistration(APIView):
-	serializer: serializers.ModelSerializer = UserRegistrationSerializer()
+	serializer: serializers.ModelSerializer = UserRegistrationSerializer
 
 	authentication_classes = []
 	permission_classes = [AllowAny]
@@ -33,43 +32,25 @@ class UserRegistration(APIView):
 	def post(self, request, format=None):
 		data = {}
 
+
 		serializer = self.serializer(data=request.data)
-		if serializer.is_valid(raise_exception=True):
+		if serializer.is_valid():
 			user = serializer.save()
-			data = serialize_user(user)
+
+			data = BaseUserSerializer(user).data
+			data['response'] = 'successfully authenticated'
 		else:
-			data = serializer.errors
+
+			data['response'] = 'Error'
+			data['error_message'] = serializer.errors
 		return Response(data)
 
 
-class SpecialNeedUserRegistration(UserRegistration):
-	serializer = SpecialNeedsRegistrationSerializer
-
-
-class VolunteerUserRegistration(UserRegistration):
-	serializer = VolunteerRegistrationSerializer
-
-
-class AdminUserRegistration(UserRegistration):
-	serializer = AdminRegistrationSerializer
-
-
-def is_volunteer(justID):
-	User = Volunteer
-	try:
-		User.objects.get(justID=justID)
-		return True
-	except User.DoesNotExist:
-		return False
-
-
-def is_specialneeds(justID):
-	User = SpecialNeed
-	try:
-		User.objects.get(justID=justID)
-		return True
-	except User.DoesNotExist:
-		return False
+class test(RetrieveAPIView):
+	queryset = BaseUser.objects.all()
+	authentication_classes = []
+	permission_classes = []
+	serializer_class = BaseUserSerializer
 
 
 class UserLogin(APIView):
@@ -84,9 +65,7 @@ class UserLogin(APIView):
 		user = authenticate(username=username, password=password)
 
 		if user:
-			context["user"] = serialize_user(user)
-			context["is_volunteer"] = is_volunteer(user.justID)
-			context["is_specialneed"] = is_specialneeds(user.justID)
+			context = BaseUserSerializer(user).data
 			context['response'] = 'successfully authenticated'
 		else:
 			context['response'] = 'Error'
@@ -108,21 +87,20 @@ class SetUserOnline(APIView):
 		user.is_online = is_online
 		user.save()
 
-	def get_user(self,request):
-		return Token.objects.get(key=request.auth.key).user
+
 	def get_is_online(self,request):
 		return True if (request.data.get('is_online') == "true") else False
 	def put(self, request):
 		context = {}
 
 		try:
-			user = self.get_user(request)
+			user = request.user
 			is_online = self.get_is_online(request)
-
-			self.delete_location(user)
+			if not is_online:
+				self.delete_location(user)
 			self.set_online(user, is_online)
 
-			context = serialize_user(user)
+			context = BaseUserSerializer(user).data
 			context['response'] = 'successfully changed status'
 			context["is_online"] = user.is_online
 
@@ -136,15 +114,19 @@ class SetUserOnline(APIView):
 class SetVolunteerOnline(SetUserOnline):
 	permission_classes = [IsAuthenticated, IsVolunteer]
 	prefix = settings.CACHE_PREFIXES["LOCATION"]["VOLUNTEER"]
-	def set_available(self,justID,value):
-		set_volunteer_is_available(justID,value)
+
+	def set_available(self, justID, value):
+		set_volunteer_is_available(justID, value)
 
 	def put(self, request):
-		user = self.get_user(request)
+		user = request.user
 		is_online = self.get_is_online(request)
-		self.set_available(user.justID,is_online)
+		if is_online:
+			self.set_available(user.justID, is_online)
 		return super().put(request)
-class SetSpecialNeedsLocation(SetUserOnline):
+
+
+class SetSpecialNeedsOnline(SetUserOnline):
 	permission_classes = [IsAuthenticated, IsSpecialNeeds]
 	prefix = settings.CACHE_PREFIXES["LOCATION"]["SPECIALNEEDS"]
 
@@ -153,7 +135,7 @@ class ActivateUser(APIView):
 	authentication_classes = []
 	permission_classes = []
 
-	def get(request, *args, **kwargs):
+	def get(self, request, *args, **kwargs):
 		User = get_user_model()
 		uidb64 = kwargs.get("uidb64")
 		token = kwargs.get("token")
@@ -168,6 +150,19 @@ class ActivateUser(APIView):
 			return HttpResponse('Thank you for your email confirmation. Now you can login your account.')
 		else:
 			return HttpResponse('Activation link is invalid!')
+
+
+class GetUserInfo(APIView):
+	authentication_classes = [TokenAuthentication]
+
+	def get(self, request, format=None):
+		context = {}
+		try:
+			context = BaseUserSerializer(request.user).data
+			context["response"] = "Data retrieved successfully."
+		except Exception:
+			context["response"] = "Error"
+		return Response(context)
 
 
 class ValidateVolunteer(UpdateAPIView):

@@ -30,11 +30,11 @@ def justID_exists(justID):
 
 def serialize_user(user):
 	return {
-		'response': 'successfully registered new user.',
-		'email'   : user.email,
-		'justID'  : user.justID,
-		'pk'      : user.pk,
-		'token'   : Token.objects.get(user=user).key
+		'email' : user.email,
+		'justID': user.justID,
+		'pk'    : user.pk,
+		"name"  : user.full_name,
+		'token' : Token.objects.get(user=user).key
 	}
 
 
@@ -99,3 +99,4 @@ def validate_specialneed(justID):
 	data = get_specialneed_users()
 	IDs = pandas.DataFrame(data, columns=['justID'])
 	return int(justID) in IDs.values
+

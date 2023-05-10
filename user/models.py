@@ -61,9 +61,11 @@ class SpecialNeedManager(BaseUserManager):
 		# Now call the super method which does the actual creation
 		return super().create(**obj_data)  # Python 3 syntax!!
 
-GENDER_CHOICES = (('M', 'Male'), ('F', 'Female'),)
-class BaseUser(AbstractBaseUser):
 
+GENDER_CHOICES = (('M', 'Male'), ('F', 'Female'),)
+
+
+class BaseUser(AbstractBaseUser):
 	email = models.EmailField(verbose_name='email address', max_length=255, unique=True, )
 	justID = models.PositiveIntegerField(verbose_name="university ID", unique=True, blank=False, null=False)
 	full_name = models.CharField(verbose_name="full name", max_length=100)
@@ -97,10 +99,9 @@ class SpecialNeed(BaseUser):
 	disability_type = models.CharField(verbose_name="type of disability", max_length=1, choices=DISABILITY_CHOICES)
 	objects = SpecialNeedManager()
 
+
 class Volunteer(BaseUser):
 	is_validated = models.BooleanField(verbose_name="is the user valid to volunteer", default=False)
-
-
 
 
 @receiver_with_multiple_senders(post_save, senders=[BaseUser, Volunteer, SpecialNeed])

@@ -31,9 +31,9 @@ def distance_match(distance, volunteers_available) -> bool:
 	return False
 
 
-def get_volunteer_is_available(justID):
-	is_availabe = cache.get(settings.CACHE_PREFIXES["VOLUNTEER"]["STATUS"].replace("*", str(justID)))
-	return is_availabe != None and is_availabe == True
+def get_volunteer_is_available(volunteer: get_user_model()):
+	is_availabe = cache.get(settings.CACHE_PREFIXES["VOLUNTEER"]["STATUS"].replace("*", str(volunteer.justID)))
+	return is_availabe and volunteer.is_online
 
 
 def set_volunteer_is_available(justID, value: bool):
@@ -74,20 +74,17 @@ def send_request_consumer_message(request_pk, data) -> None:
 
 
 def send_request(user, request) -> None:
-	async_to_sync(channel_layer.group_send)("user" + str(user.justID), {"type": "chat_message", "data":
-		{
-			"location"          : str(request["location"]),
-			"help_type"         : str(request["help_type"]),
-			"request_websocket" : generate_websocket(prefix="ws", view_name="request", request_id=str(request["id"])),
-			"chatroom_websocket": generate_websocket(prefix="ws", view_name="chatroom", request_id=str(request["id"]))
-		}})
+	request["request_websocket"] = generate_websocket(prefix="ws", view_name="request", request_id=str(request["id"]))
+	request["chatroom_websocket"] = generate_websocket(prefix="ws", view_name="chatroom", request_id=str(request["id"]))
+
+	async_to_sync(channel_layer.group_send)("user" + str(user.justID), {"type": "chat_message", "data": request})
 
 
 def send_request_to_volunteer(request):
 	User = get_user_model()
 	volunteers = get_volunteers_locations()
 	shuffle(volunteers)
-	
+
 	for key in volunteers:
 
 		volunteer_location = cache.get(key)
@@ -97,12 +94,13 @@ def send_request_to_volunteer(request):
 
 			distance = calculate_distance(request["location"], volunteer_location)
 
-			if distance_match(distance, len(volunteers)) and get_volunteer_is_available(volunteer.justID):
+			if distance_match(distance, len(volunteers)) and get_volunteer_is_available(volunteer):
 				send_request(volunteer, request)
 				set_volunteer_is_available(volunteer.justID, False)
 				cache_request_status(str(request["id"]), False)
 				return True
 
 	sleep(10)
-	send_request_consumer_message(request["id"], "We couldn't find a volunteer for you, please try again.")
+	send_request_consumer_message(request["id"], {"response": "Error",
+	                                              "message" : "We couldn't find a volunteer for you, please try again."})
 	return False

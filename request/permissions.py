@@ -1,11 +1,17 @@
+import string
+
 from rest_framework import permissions
 from channels_permissions.permissions import get_request, get_volunteer
 from user.models import SpecialNeed, Volunteer
 from .models import Request
 
 
+def get_error_message(message: string) -> dict:
+	return {"response": "Error", "message": message}
+
+
 class CanAcceptRequestPermission(permissions.BasePermission):
-	message = 'You cannot accept this request.'
+	message = get_error_message('You cannot accept this request.')
 
 	def has_permission(self, request, view):
 		try:
@@ -17,7 +23,7 @@ class CanAcceptRequestPermission(permissions.BasePermission):
 
 
 class CanCancelRequestPermission(permissions.BasePermission):
-	message = 'You cannot cancel this request.'
+	message = get_error_message('You cannot cancel this request.')
 
 	def has_permission(self, request, view):
 		try:
@@ -32,7 +38,7 @@ class CanCancelRequestPermission(permissions.BasePermission):
 
 
 class IsSpecialNeeds(permissions.BasePermission):
-	message = 'You must be a Special Needs user to create a request.'
+	message = get_error_message('You must be a Special Needs user to create a request.')
 
 	def has_permission(self, request, view):
 		try:
@@ -45,7 +51,7 @@ class IsSpecialNeeds(permissions.BasePermission):
 
 
 class NoOpenRequest(permissions.BasePermission):
-	message = 'You cannot create this request, you have a current request.'
+	message = get_error_message('You cannot create this request, you have a current request.')
 
 	def has_permission(self, request, view):
 		try:
@@ -60,7 +66,7 @@ class NoOpenRequest(permissions.BasePermission):
 
 
 class OwnsRequest(permissions.BasePermission):
-	message = 'You do not own this request.'
+	message = get_error_message('You do not own this request.')
 
 	def has_permission(self, request, view):
 		try:
@@ -73,7 +79,7 @@ class OwnsRequest(permissions.BasePermission):
 
 
 class RequestNotFinished(permissions.BasePermission):
-	message = 'This Request is finished.'
+	message = get_error_message('You cannot accept this request.')
 
 	def has_permission(self, request, view):
 		try:
@@ -98,3 +104,4 @@ def get_specialneeds(pk) -> SpecialNeed:
 
 	except SpecialNeed.DoesNotExist:
 		raise SpecialNeed.DoesNotExist
+
