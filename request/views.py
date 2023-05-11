@@ -96,7 +96,8 @@ class CancelRequest(AcceptRequest):
 		request_pk = kwargs.get('pk')
 
 		serialized_request = clean_fields(Request.objects.get(id=request_pk), fields=["_state", "date_created", "is_finished"])
-		send_request_consumer_message(request_pk, "User has cancelled the request, waiting for a new volunteer")
+		send_request_consumer_message(request_pk, {"response": "cancel",
+		                                           "message" : "User has cancelled the request, waiting for a new volunteer"})
 		task_send_request.delay(serialized_request)
 		set_volunteer_is_available(volunteer.justID, True)
 		return self.partial_update(request, *args, **kwargs)
