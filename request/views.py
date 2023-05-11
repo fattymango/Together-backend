@@ -72,7 +72,7 @@ class AcceptRequest(generics.UpdateAPIView):
 
 		data = {"response"      : "success",
 		        "message"       : "Volunteer has accepted the request",
-		        "volunteer_name": BaseUserSerializer(volunteer), }
+		        "volunteer_name": BaseUserSerializer(volunteer).data, }
 		if volunteer_location:
 			data["location"] = {"latitude" : volunteer_location[0],
 			                    "longitude": volunteer_location[1]}
