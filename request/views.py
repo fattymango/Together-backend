@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
 from user.serializers import BaseUserSerializer
-from .models import clean_fields
+from .models import RequestSerializer as CeleryRequestSerializer
 from .serializers import RequestSerializer, UpdateRequestSerializer
 from rest_framework.response import Response
 from rest_framework import status
@@ -95,7 +95,7 @@ class CancelRequest(AcceptRequest):
 		volunteer = request.user
 		request_pk = kwargs.get('pk')
 
-		serialized_request = clean_fields(Request.objects.get(id=request_pk), fields=["_state", "date_created", "is_finished"])
+		serialized_request = dict(CeleryRequestSerializer(Request.objects.get(id=request_pk)).data)
 		send_request_consumer_message(request_pk, {"response": "cancel",
 		                                           "message" : "User has cancelled the request, waiting for a new volunteer"})
 		task_send_request.delay(serialized_request)
