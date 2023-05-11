@@ -79,7 +79,7 @@ class OwnsRequest(permissions.BasePermission):
 
 
 class RequestNotFinished(permissions.BasePermission):
-	message = get_error_message('You cannot accept this request.')
+	message = get_error_message('Request is finished')
 
 	def has_permission(self, request, view):
 		try:

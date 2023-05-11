@@ -112,5 +112,6 @@ class FinishRequest(AcceptRequest):
 		except AttributeError:
 			request.data._mutable = True
 			request.data.update({'is_finished': True})
-		send_request_consumer_message(kwargs.get('pk'), "Request has been finished.")
+		send_request_consumer_message(kwargs.get('pk'), {"response": "cancel",
+		                                                 "message" : "Request is finished."})
 		return self.partial_update(request, *args, **kwargs)
