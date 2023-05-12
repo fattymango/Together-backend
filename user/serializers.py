@@ -63,7 +63,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = BaseUser
 		fields = ['email', 'justID', 'token', 'full_name', 'gender', 'is_active', "is_validated", 'is_admin',
-		          'is_online', 'is_just_admin', 'is_volunteer', 'is_specialNeeds']
+		          'is_online', 'is_just_admin', 'is_volunteer', 'is_specialNeeds', "phone_number"]
 
 	def get_is_volunteer(self, instance):
 		User = Volunteer

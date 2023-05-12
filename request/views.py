@@ -36,7 +36,7 @@ class CreateRequest(generics.CreateAPIView):
 				request.data.update({'specialNeeds': request.user.id})
 			logger.error(request.user)
 			response = super().create(request, *args, **kwargs)
-			logger.error("hello2")
+
 			response.data["request_websocket"] = generate_websocket(prefix="ws", view_name="request",
 			                                                        specialneed="specialneed",
 			                                                        request_id=str(response.data["id"]))

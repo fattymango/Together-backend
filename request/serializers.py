@@ -6,7 +6,8 @@ from .models import Request
 class RequestSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Request
-		fields = ['id', 'specialNeeds', 'location', 'help_type', "gender", 'is_finished']
+		fields = ['id', 'specialNeeds', 'location', 'help_type', "gender", 'is_finished', "square", "building",
+		          "description"]
 
 
 class UpdateRequestSerializer(RequestSerializer):

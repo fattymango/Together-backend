@@ -74,7 +74,8 @@ def send_request_consumer_message(request_pk, data) -> None:
 
 
 def send_request(user, request) -> None:
-	request["request_websocket"] = generate_websocket(prefix="ws", view_name="request", request_id=str(request["id"]))
+	request["request_websocket"] = generate_websocket(prefix="ws", view_name="request", volunteer="volunteer",
+	                                                  request_id=str(request["id"]))
 	request["chatroom_websocket"] = generate_websocket(prefix="ws", view_name="chatroom", request_id=str(request["id"]))
 
 	async_to_sync(channel_layer.group_send)("user" + str(user.justID), {"type": "chat_message", "data": request})

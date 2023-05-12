@@ -25,7 +25,10 @@ class Request(models.Model):
 	date_created = models.DateField(auto_now_add=True)
 	location = models.CharField(max_length=50, null=False, blank=False)
 	help_type = models.CharField(max_length=1, choices=HELP_TYPE, null=False, blank=False)
-	gender = models.CharField(max_length=1, choices=GENDER_CHOICES ,default="N")
+	square = models.CharField(max_length=2, blank=False, null=False, default="A")
+	building = models.CharField(max_length=1, blank=False, null=False, default="1")
+	description = models.TextField(max_length=200, blank=False, null=False, default="no data")
+	gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default="N")
 	is_finished = models.BooleanField(default=False)
 
 	def __str__(self) -> str:
@@ -49,7 +52,7 @@ class RequestSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Request
-		fields = ['id', 'specialNeed', 'location', 'help_type', "gender", ]
+		fields = ['id', 'specialNeed', 'location', 'help_type', "gender", "square", "building", "description"]
 
 	def get_specialNeeds(self, instance):
 		return BaseUserSerializer(instance.specialNeeds).data

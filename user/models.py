@@ -74,6 +74,7 @@ class BaseUser(AbstractBaseUser):
 	is_admin = models.BooleanField(default=False)
 	is_online = models.BooleanField(default=False)
 	is_just_admin = models.BooleanField(default=False)
+	phone_number = models.CharField(max_length=14, blank=False, null=False, default="0787349428")
 	objects = MyBaseUserManager()
 
 	USERNAME_FIELD = 'justID'
