@@ -70,7 +70,7 @@ class AcceptRequest(generics.UpdateAPIView):
 			request.data._mutable = True
 			request.data.update({'volunteer': volunteer.pk})
 
-		data = {"response" : "success",
+		data = {"response" : "accept",
 		        "message"  : "Volunteer has accepted the request",
 		        "volunteer": BaseUserSerializer(volunteer).data, }
 		if volunteer_location:
@@ -112,6 +112,6 @@ class FinishRequest(AcceptRequest):
 		except AttributeError:
 			request.data._mutable = True
 			request.data.update({'is_finished': True})
-		send_request_consumer_message(kwargs.get('pk'), {"response": "cancel",
+		send_request_consumer_message(kwargs.get('pk'), {"response": "finish",
 		                                                 "message" : "Request is finished."})
 		return self.partial_update(request, *args, **kwargs)
