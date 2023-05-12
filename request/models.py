@@ -26,7 +26,7 @@ class Request(models.Model):
 	location = models.CharField(max_length=50, null=False, blank=False)
 	help_type = models.CharField(max_length=1, choices=HELP_TYPE, null=False, blank=False)
 	square = models.CharField(max_length=2, blank=False, null=False, default="A")
-	building = models.CharField(max_length=1, blank=False, null=False, default="1")
+	building = models.CharField(max_length=1, blank=True, null=True, )
 	description = models.TextField(max_length=200, blank=False, null=False, default="no data")
 	gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default="N")
 	is_finished = models.BooleanField(default=False)
