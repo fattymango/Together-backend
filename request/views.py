@@ -6,12 +6,13 @@ from rest_framework import generics, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
+from location.permissions import IsVolunteer
 from user.serializers import BaseUserSerializer
 from .models import RequestSerializer as CeleryRequestSerializer
 from .serializers import RequestSerializer, UpdateRequestSerializer
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.sites.shortcuts import get_current_site
+from rest_framework.views import APIView
 from .permissions import *
 from .util import send_request_consumer_message, set_volunteer_is_available, generate_websocket
 from .tasks import task_send_request
@@ -76,6 +77,9 @@ class AcceptRequest(generics.UpdateAPIView):
 		if volunteer_location:
 			data["location"] = {"latitude" : volunteer_location[0],
 			                    "longitude": volunteer_location[1]}
+		else:
+			data["location"] = {"latitude" : 0,
+			                    "longitude": 0}
 
 		send_request_consumer_message(request_pk, data)
 		set_volunteer_is_available(volunteer.justID, False)
@@ -114,4 +118,24 @@ class FinishRequest(AcceptRequest):
 			request.data.update({'is_finished': True})
 		send_request_consumer_message(kwargs.get('pk'), {"response": "finish",
 		                                                 "message" : "Request is finished."})
+		req = Request.objects.get(kwargs.get('pk'))
+		if req.volunteer:
+			set_volunteer_is_available(req.volunteer.justID, True)
 		return self.partial_update(request, *args, **kwargs)
+
+
+class DeclineRequest(APIView):
+	# permission_classes=[IsAuthenticated,IsVolunteer,CanDeclineRequest]
+	authentication_classes = [TokenAuthentication]
+
+	def get(self, request, *args, **kwargs):
+		volunteer = request.user
+		request_pk = kwargs.get('pk')
+		try:
+			serialized_request = dict(CeleryRequestSerializer(Request.objects.get(id=request_pk)).data)
+
+			task_send_request.delay(serialized_request)
+			set_volunteer_is_available(volunteer.justID, True)
+			return Response(data={"response": "success"})
+		except:
+			return Response(data={"response": "Error", "data": "this request does not exist."})

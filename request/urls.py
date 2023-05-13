@@ -7,6 +7,7 @@ urlpatterns = [
 	path('api/accept/<int:pk>/', views.AcceptRequest.as_view(), name="request-accept"),
 	path('api/cancel/<int:pk>/', views.CancelRequest.as_view(), name="request-cancel"),
 	path('api/finish/<int:pk>/', views.FinishRequest.as_view(), name="request-finish"),
+	path('api/decline/<int:pk>/', views.DeclineRequest.as_view(), name="request-decline"),
 
 ]
 

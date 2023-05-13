@@ -61,9 +61,7 @@ def send_validation_volunteer_email(pk, name):
 		'uid'   : urlsafe_base64_encode(force_bytes(pk)),
 	})
 
-	email = EmailMessage(
-		mail_subject, message, to=[os.environ.get("VALIDATOR_EMAIL")]
-	)
+	email = EmailMessage(mail_subject, message, to=[os.environ.get("VALIDATOR_EMAIL")])
 	return email.send()
 
 
