@@ -118,7 +118,7 @@ class FinishRequest(AcceptRequest):
 			request.data.update({'is_finished': True})
 		send_request_consumer_message(kwargs.get('pk'), {"response": "finish",
 		                                                 "message" : "Request is finished."})
-		req = Request.objects.get(kwargs.get('pk'))
+		req = Request.objects.get(pk=kwargs.get('pk'))
 		if req.volunteer:
 			set_volunteer_is_available(req.volunteer.justID, True)
 		return self.partial_update(request, *args, **kwargs)
