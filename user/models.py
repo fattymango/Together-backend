@@ -111,10 +111,10 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 		Token.objects.create(user=instance)
 
 
-@receiver(post_save, sender=Volunteer)
-def send_validation_email(sender, instance=None, created=False, **kwargs):
-	if created:
-		return task_send_volunteer_validation_email.delay(instance.pk, instance.full_name)
+# @receiver(post_save, sender=Volunteer)
+# def send_validation_email(sender, instance=None, created=False, **kwargs):
+# 	if created:
+# 		return task_send_volunteer_validation_email.delay(instance.pk, instance.full_name)
 
 
 @receiver_with_multiple_senders(post_save, senders=[BaseUser, Volunteer, SpecialNeed])

@@ -27,6 +27,8 @@ services:
   redis-broker:
     image: "redis:latest"
     command: redis-server --port ${ENV_REDIS_BROKER_PORT}
+    expose:
+      - "${ENV_REDIS_BROKER_PORT}"
     networks:
       - backend
 
@@ -43,30 +45,7 @@ services:
       - pgdata:/var/lib/postgres/data
     networks:
       - backend
-# django:
-#     build:
-#       context: .
-#       dockerfile: prod/dockerfile
-#     container_name: django
-#     command:  gunicorn $PROJECT_NAME.wsgi:application --bind $GUNICORN_IP:$GUNICORN_PORT
-# # daphne -b $DAPHNE_IP -p $DAPHNE_PORT $PROJECT_NAME.asgi:application 
 
-#     expose:
-#       - 8000
-#       - 8001
-#     env_file:
-#       - ".env"
-#     environment:
-#       - CONTAINER=django
-#     volumes:
-#       - .:/code
-#       - static_volume:/home/app/django/staticfiles
-
-#     networks:
-#       - backend
-#     depends_on:
-#       - redis-master
-#       - db
   gunicorn:
     build:
       context: .
