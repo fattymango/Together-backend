@@ -42,7 +42,7 @@ class UpdateLocation(generics.GenericAPIView):
             return Response(data=message, status=valid_status)
 
         key = self.prefix.replace("*", (str(user.justID)))
-        cache.add(key, (lat, long), timeout=2 * 60)
+        cache.set(key, (lat, long), timeout=2 * 60)
         return Response(data={"response": "Location updated successfully"})
 
 
