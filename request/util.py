@@ -58,6 +58,9 @@ def get_volunteers_locations() -> list:
 	return cache.keys(settings.CACHE_PREFIXES["LOCATION"]["VOLUNTEER"])
 
 
+# def get_volunteer_location():
+# 	return  ache.keys(settings.CACHE_PREFIXES["LOCATION"]["VOLUNTEER"])
+
 def generate_websocket(*args, **kwargs) -> str:
 	url_args = ["ws://", os.environ["SITE_DOMAIN"], "/"]
 	try:

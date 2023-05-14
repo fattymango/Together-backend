@@ -139,3 +139,4 @@ class DeclineRequest(APIView):
 			return Response(data={"response": "success"})
 		except:
 			return Response(data={"response": "Error", "data": "this request does not exist."})
+

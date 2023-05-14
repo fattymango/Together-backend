@@ -7,8 +7,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.cache import cache
 from django.conf import settings
+from rest_framework.views import APIView
 
-from .permissions import IsSpecialNeeds, IsVolunteer
+from .permissions import IsSpecialNeeds, IsVolunteer, CanGetVolunteersLocation
 
 # Create your views here.
 logger = logging.getLogger(__name__)
@@ -54,3 +55,15 @@ class SpecialNeedsUpdateLocation(UpdateLocation):
     prefix = settings.CACHE_PREFIXES["LOCATION"]["SPECIALNEEDS"]
 
 
+class GetVolunteersCurrentLocation(APIView):
+    permission_classes = [IsSpecialNeeds, CanGetVolunteersLocation]
+    authentication_classes = [TokenAuthentication]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            key = settings.CACHE_PREFIXES["LOCATION"]["VOLUNTEER"].replace("*", (str(kwargs.get("pk"))))
+            data = cache.get(key)
+
+            return Response(data={"response": "success", "latitude": data[0], "longitude": data[1]})
+        except:
+            return Response(data={"response": "Error", "latitude": 0, "longitude": 0})
