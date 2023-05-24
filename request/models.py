@@ -54,7 +54,7 @@ class RequestSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Request
 		fields = ['id', 'specialNeed', "volunteer", 'location', 'help_type', "gender", "square", "building",
-		          "description"]
+		          "description", "is_finished"]
 
 	def get_specialNeeds(self, instance):
 		return BaseUserSerializer(instance.specialNeeds).data
