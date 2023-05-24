@@ -156,7 +156,11 @@ class GetLastRequest(APIView):
 			if req == None:
 				raise
 			serialized_request = dict(CeleryRequestSerializer(req).data)
-
+			serialized_request["request_websocket"] = generate_websocket(prefix="ws", view_name="request",
+			                                                             volunteer="volunteer",
+			                                                             request_id=str(req.pk))
+			serialized_request["chatroom_websocket"] = generate_websocket(prefix="ws", view_name="chatroom",
+			                                                              request_id=str(req.pk))
 			# set_volunteer_is_available(volunteer.justID, False)
 			return Response(data={"response": "success", "data": serialized_request})
 		except Exception as e:
