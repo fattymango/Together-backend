@@ -49,14 +49,20 @@ def clean_fields(request: Request, fields: list) -> dict:
 
 class RequestSerializer(serializers.ModelSerializer):
 	specialNeed = serializers.SerializerMethodField(method_name='get_specialNeeds')
+	volunteer = serializers.SerializerMethodField(method_name='get_volunteer')
 
 	class Meta:
 		model = Request
-		fields = ['id', 'specialNeed', 'location', 'help_type', "gender", "square", "building", "description"]
+		fields = ['id', 'specialNeed', "volunteer", 'location', 'help_type', "gender", "square", "building",
+		          "description"]
 
 	def get_specialNeeds(self, instance):
 		return BaseUserSerializer(instance.specialNeeds).data
 
+	def get_volunteer(self, instance):
+		if instance.volunteer == None:
+			return None
+		return BaseUserSerializer(instance.volunteer).data
 
 @receiver(post_save, sender=Request)
 def create_chat_room(sender, instance: Request = None, created=False, **kwargs):

@@ -140,3 +140,39 @@ class DeclineRequest(APIView):
 		except:
 			return Response(data={"response": "Error", "data": "this request does not exist."})
 
+
+class GetLastRequest(APIView):
+	# permission_classes=[IsAuthenticated,IsVolunteer,CanDeclineRequest]
+	authentication_classes = [TokenAuthentication]
+
+	def get_request_query(self, request) -> Request:
+		return None
+
+	def get(self, request, *args, **kwargs):
+
+		try:
+
+			req = self.get_request_query(request)
+			if req == None:
+				raise
+			serialized_request = dict(CeleryRequestSerializer(req).data)
+
+			# set_volunteer_is_available(volunteer.justID, False)
+			return Response(data={"response": "success", "data": serialized_request})
+		except Exception as e:
+			logger.error(e)
+			return Response(data={"response": "Error", "data": "You do not have any request"})
+
+
+class SpecialNeedsGetLastRequest(GetLastRequest):
+	permission_classes = [IsSpecialNeeds]
+
+	def get_request_query(self, request) -> Request:
+		return Request.objects.filter(specialNeeds=request.user).last()
+
+
+class VolunteerGetLastRequest(GetLastRequest):
+	permission_classes = [IsVolunteer]
+
+	def get_request_query(self, request) -> Request:
+		return Request.objects.filter(volunteer=request.user).last()
