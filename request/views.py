@@ -148,6 +148,12 @@ class GetLastRequest(APIView):
 	def get_request_query(self, request) -> Request:
 		return None
 
+	def get_chat_websocket_url(self, pk):
+		return None
+
+	def get_request_websocket_url(self, pk):
+		return None
+
 	def get(self, request, *args, **kwargs):
 
 		try:
@@ -156,11 +162,8 @@ class GetLastRequest(APIView):
 			if req == None:
 				raise
 			serialized_request = dict(CeleryRequestSerializer(req).data)
-			serialized_request["request_websocket"] = generate_websocket(prefix="ws", view_name="request",
-			                                                             volunteer="volunteer",
-			                                                             request_id=str(req.pk))
-			serialized_request["chatroom_websocket"] = generate_websocket(prefix="ws", view_name="chatroom",
-			                                                              request_id=str(req.pk))
+			serialized_request["request_websocket"] = self.get_request_websocket_url(req.pk)
+			serialized_request["chatroom_websocket"] = self.get_chat_websocket_url(req.pk)
 			# set_volunteer_is_available(volunteer.justID, False)
 			return Response(data={"response": "success", "data": serialized_request})
 		except Exception as e:
@@ -171,12 +174,30 @@ class GetLastRequest(APIView):
 class SpecialNeedsGetLastRequest(GetLastRequest):
 	permission_classes = [IsSpecialNeeds]
 
+	def get_chat_websocket_url(self, pk):
+		return generate_websocket(prefix="ws", view_name="request",
+		                          volunteer="specialneed",
+		                          request_id=str(pk))
+
+	def get_request_websocket_url(self, pk):
+		return generate_websocket(prefix="ws", view_name="chatroom",
+		                          request_id=str(pk))
+
 	def get_request_query(self, request) -> Request:
 		return Request.objects.filter(specialNeeds=request.user).last()
 
 
 class VolunteerGetLastRequest(GetLastRequest):
 	permission_classes = [IsVolunteer]
+
+	def get_chat_websocket_url(self, pk):
+		return generate_websocket(prefix="ws", view_name="request",
+		                          volunteer="volunteer",
+		                          request_id=str(pk))
+
+	def get_request_websocket_url(self, pk):
+		return generate_websocket(prefix="ws", view_name="chatroom",
+		                          request_id=str(pk))
 
 	def get_request_query(self, request) -> Request:
 		return Request.objects.filter(volunteer=request.user).last()
