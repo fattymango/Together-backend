@@ -175,12 +175,12 @@ class SpecialNeedsGetLastRequest(GetLastRequest):
 	permission_classes = [IsSpecialNeeds]
 
 	def get_chat_websocket_url(self, pk):
-		return generate_websocket(prefix="ws", view_name="request",
-		                          volunteer="specialneed",
+		return generate_websocket(prefix="ws", view_name="chatroom",
 		                          request_id=str(pk))
 
 	def get_request_websocket_url(self, pk):
-		return generate_websocket(prefix="ws", view_name="chatroom",
+		return generate_websocket(prefix="ws", view_name="request",
+		                          volunteer="specialneed",
 		                          request_id=str(pk))
 
 	def get_request_query(self, request) -> Request:
@@ -191,12 +191,12 @@ class VolunteerGetLastRequest(GetLastRequest):
 	permission_classes = [IsVolunteer]
 
 	def get_chat_websocket_url(self, pk):
-		return generate_websocket(prefix="ws", view_name="request",
-		                          volunteer="volunteer",
+		return generate_websocket(prefix="ws", view_name="chatroom",
 		                          request_id=str(pk))
 
 	def get_request_websocket_url(self, pk):
-		return generate_websocket(prefix="ws", view_name="chatroom",
+		return generate_websocket(prefix="ws", view_name="request",
+		                          volunteer="volunteer",
 		                          request_id=str(pk))
 
 	def get_request_query(self, request) -> Request:
