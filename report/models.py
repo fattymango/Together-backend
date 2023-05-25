@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.conf import settings
 
@@ -6,7 +7,13 @@ from django.conf import settings
 class Report(models.Model):
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="report_user")
 	request = models.ForeignKey("request.Request", on_delete=models.CASCADE, related_name="report_request")
-	content = models.CharField(max_length=1000, null=False, blank=False)
+	content = models.CharField(max_length=1000, null=True, blank=True)
+	rating = models.IntegerField(
+		blank=False,
+		null=False,
+		default=5,
+		validators=[MaxValueValidator(5), MinValueValidator(0)]
+	)
 	is_resolved = models.BooleanField(default=False)
 	date_created = models.DateField(auto_now_add=True, blank=True, null=True)
 

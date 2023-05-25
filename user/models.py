@@ -70,7 +70,7 @@ class BaseUser(AbstractBaseUser):
 	justID = models.PositiveIntegerField(verbose_name="university ID", unique=True, blank=False, null=False)
 	full_name = models.CharField(verbose_name="full name", max_length=100)
 	gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-	is_active = models.BooleanField(default=False)
+	is_active = models.BooleanField(default=True)
 	is_admin = models.BooleanField(default=False)
 	is_online = models.BooleanField(default=False)
 	is_just_admin = models.BooleanField(default=False)
