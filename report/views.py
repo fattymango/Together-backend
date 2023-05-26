@@ -3,7 +3,8 @@ import logging
 from django.shortcuts import render
 
 from report.models import Report
-from .serializers import ReportSerializer,UpdateReportSerializer
+from request.permissions import IsSpecialNeeds, OwnsRequest
+from .serializers import ReportSerializer, UpdateReportSerializer
 from .permissions import CanCreateReport,IsAdmin,ReportExists
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 class CreateReport(generics.CreateAPIView):
 	queryset = Report.objects.all()
 	serializer_class = ReportSerializer
-	permission_classes = [IsAuthenticated, ReportExists,CanCreateReport]
+	permission_classes = [IsAuthenticated, IsSpecialNeeds, ReportExists, OwnsRequest]
 	authentication_classes = [TokenAuthentication]
 
 class UpdateReport(generics.UpdateAPIView):

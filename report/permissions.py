@@ -32,9 +32,8 @@ class CanCreateReport(permissions.BasePermission):
 
 			req = get_request(view.kwargs.get('pk'))
 			assigned_specialNeeds = req.specialNeeds.pk == user.pk
-			assigned_volunteer = (req.volunteer != None and req.volunteer.pk == user.pk)
 
-			return assigned_specialNeeds or assigned_volunteer
+			return assigned_specialNeeds
 		except Exception as e:
 			return False
 
