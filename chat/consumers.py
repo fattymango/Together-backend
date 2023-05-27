@@ -4,6 +4,7 @@ from channels.generic.websocket import JsonWebsocketConsumer
 from channels_permissions.consumers import Permissions
 from channels_permissions.permissions import *
 from chat.models import Message
+from chat.serializers import MessageSerializer
 
 
 class ChatRoomConsumer(Permissions, JsonWebsocketConsumer):
@@ -52,8 +53,4 @@ def create_message(user, room, message) -> Message:
 
 
 def serialize_message(message) -> dict:
-	return {
-		"author" : message.author.full_name,
-		"request": message.request.pk,
-		"message": message.message
-	}
+	return MessageSerializer(message).data

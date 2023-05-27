@@ -6,6 +6,7 @@ from rest_framework import generics, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
+from chat.models import ChatRoom
 from location.permissions import IsVolunteer
 from user.serializers import BaseUserSerializer
 from .models import RequestSerializer as CeleryRequestSerializer
@@ -56,6 +57,11 @@ class AcceptRequest(generics.UpdateAPIView):
 	permission_classes = [IsAuthenticated, CanAcceptRequestPermission, RequestNotFinished]
 	authentication_classes = [TokenAuthentication]
 
+	def set_volunteer_chat_room(self, request_pk, value):
+		room = ChatRoom.objects.get(id=request_pk)
+		room.volunteer = value
+		room.save()
+
 	def put(self, request, *args, **kwargs):
 		return self.patch(request, *args, **kwargs)
 
@@ -83,7 +89,7 @@ class AcceptRequest(generics.UpdateAPIView):
 
 		send_request_consumer_message(request_pk, data)
 		set_volunteer_is_available(volunteer.justID, False)
-
+		self.set_volunteer_chat_room(request_pk, volunteer)
 		return self.partial_update(request, *args, **kwargs)
 
 
@@ -104,6 +110,7 @@ class CancelRequest(AcceptRequest):
 		                                           "message" : "User has cancelled the request, waiting for a new volunteer"})
 		task_send_request.delay(serialized_request)
 		set_volunteer_is_available(volunteer.justID, True)
+		self.set_volunteer_chat_room(request_pk, None)
 		return self.partial_update(request, *args, **kwargs)
 
 
