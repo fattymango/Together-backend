@@ -170,3 +170,4 @@ class ValidateVolunteer(UpdateAPIView):
 	serializer_class = UpdateVolunteerSerializer
 	permission_classes = [IsAuthenticated, IsAdmin]
 	authentication_classes = [TokenAuthentication]
+	lookup_field = "justID"

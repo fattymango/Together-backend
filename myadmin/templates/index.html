@@ -38,7 +38,9 @@
 
       <td>
           {% if report.is_resolved  %}
-          <button class="btn btn-success" id = "resolve_{{report.id}}" onclick="toggleResolved('{% url 'update_report' report.id %}','{{report.id}}')">resolve</button>
+          <button class="btn btn-success" id="resolve_{{report.id}}"
+                  onclick="toggleResolved('{% url 'update_report' report.id %}','{{report.id}}')">resolved
+          </button>
 {% else %}
           <button class="btn btn-danger" id="resolve_{{report.id}}"
                   onclick="toggleResolved('{% url 'update_report' report.id %}','{{report.id}}')">unresolved</button>
@@ -86,17 +88,22 @@
           {% endif %}
       </td>
 
-      <td>
-          {% if volunteer.is_validated  %}
-          <button class="btn btn-success" id = "validate_{{volunteer.id}}" onclick="toggleValidated('{% url 'validate_user' volunteer.id %}','{{volunteer.id}}')">validated</button>
-{% else %}
-          <button class="btn btn-danger" id="validate_{{volunteer.id}}"
-                  onclick="toggleValidated('{% url 'validate_user' volunteer.id %}','{{volunteer.id}}')">not validated</button>
+            <td>
+                {% if volunteer.is_validated %}
+                <button class="btn btn-success" id="validate_{{volunteer.justID}}"
+                        onclick="toggleValidated('{% url 'validate_user' volunteer.justID %}','{{volunteer.justID}}')">
+                    validated
+                </button>
+                {% else %}
+                <button class="btn btn-danger" id="validate_{{volunteer.justID}}"
+                        onclick="toggleValidated('{% url 'validate_user' volunteer.justID %}','{{volunteer.justID}}')">
+                    not validated
+                </button>
 
-{% endif %}
+                {% endif %}
 
 
-      </td>
+            </td>
     </tr>
 
   {%endfor%}

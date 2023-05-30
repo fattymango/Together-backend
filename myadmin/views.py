@@ -20,16 +20,17 @@ class Index(View):
 		user = request.user
 		message = ''
 		context = {}
-		if user.is_authenticated :
-			if user.is_just_admin:
-				context["message"] = ("hello" + str(user.justID))
-				context["reports"] = Report.objects.all()
-				context["volunteers"] = Volunteer.objects.filter()
-				request.session['token'] = Token.objects.get(user = request.user).key
-			else:
-				context["message"] = ("You can't view this page, You are not a just staff. " + str(user.justID))
-			return render(request,self.template_name,context)
+		if user.is_authenticated and user.is_just_admin:
+
+			context["message"] = ("hello" + str(user.justID))
+			context["reports"] = Report.objects.all()
+			context["volunteers"] = Volunteer.objects.all()
+
+			request.session['token'] = Token.objects.get(user=request.user).key
+
+			return render(request, self.template_name, context)
 		else:
+
 			return redirect('admin-login')
 
 
@@ -46,7 +47,7 @@ class LoginView(View):
 		return request.user.is_authenticated
 
 	def get(self, request):
-		if self.is_authenticated(request):
+		if self.is_authenticated(request) and request.user.is_just_admin:
 			return redirect('admin-index')
 
 		form = self.form_class()

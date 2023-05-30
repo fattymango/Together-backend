@@ -7,8 +7,8 @@ from rest_framework.views import APIView
 
 from report.models import Report
 from request.permissions import IsSpecialNeeds, OwnsRequest
-from .serializers import ReportSerializer
-from .permissions import ReportExists, CanCreateReport
+from .serializers import ReportSerializer, UpdateReportSerializer
+from .permissions import ReportExists, CanCreateReport, IsAdmin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
@@ -36,3 +36,10 @@ class CreateReport(generics.CreateAPIView):
 			logging.critical(Exception, exc_info=True)
 			return Response(data={"error": "error has occurred, please make sure the credentials are correct."},
 			                status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateReport(generics.UpdateAPIView):
+	queryset = Report.objects.all()
+	serializer_class = UpdateReportSerializer
+	permission_classes = [IsAuthenticated, IsAdmin]
+	authentication_classes = [TokenAuthentication]

@@ -9,7 +9,7 @@ urlpatterns = [
 	path('api/specialneeds/setonline/', views.SetSpecialNeedsOnline.as_view(), name="SetSpecialNeedsOnline"),
 	path('activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/',
 	     views.ActivateUser.as_view(), name='activate'),
-	path('activate/<int:pk>/',
+	path('activate/<int:justID>/',
 	     views.ValidateVolunteer.as_view(), name='validate_user'),
 	path("api/", views.GetUserInfo.as_view())
 ]
