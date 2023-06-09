@@ -22,12 +22,16 @@ class BasePermission(object):
 			return RuntimeError
 		return None
 
+class FalseBasePermission(BasePermission):
+	def has_permission(self, *args, **kwargs) -> bool:
+		return False
+
 
 class NotAnonymousUser(BasePermission):
 
 	def has_permission(self, *args, **kwargs) -> bool:
 		try:
-			return not isinstance(self.scope["user"],AnonymousUser)
+			return not isinstance(self.scope["user"], AnonymousUser)
 		except Exception:
 			return False
 
@@ -101,7 +105,7 @@ class CanAccessChatRoom(BasePermission):
 
 def get_chat_room(pk)->ChatRoom:
 	try:
-		return ChatRoom.objects.get(request=pk)
+		return ChatRoom.objects.get(id=pk)
 
 	except ChatRoom.DoesNotExist:
 		logger.error("a7a")

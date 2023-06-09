@@ -98,6 +98,7 @@ class SpecialNeed(BaseUser):
 	DISABILITY_CHOICES = (('M', 'Movement'), ('V', 'Visual'), ('E', 'Else'))
 
 	disability_type = models.CharField(verbose_name="type of disability", max_length=1, choices=DISABILITY_CHOICES)
+
 	objects = SpecialNeedManager()
 
 

@@ -32,7 +32,7 @@ class Request(models.Model):
 	is_finished = models.BooleanField(default=False)
 
 	def __str__(self) -> str:
-		return str(self.pk) + " " + str(self.specialNeeds.justID) + " " + self.location
+		return str(self.pk) + " " + str(self.specialNeeds) + " " + str(self.volunteer)
 
 
 def clean_fields(request: Request, fields: list) -> dict:

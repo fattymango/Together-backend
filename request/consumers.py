@@ -1,17 +1,15 @@
 from asgiref.sync import async_to_sync
-from channels.generic.websocket import JsonWebsocketConsumer
 
-from channels_permissions.consumers import Permissions
+from channels_permissions.consumers import PermissionsJsonWebsocketConsumer
 from channels_permissions.permissions import *
 
 
-class RequestConsumer(Permissions, JsonWebsocketConsumer):
+class RequestConsumer(PermissionsJsonWebsocketConsumer):
 	permission_classes = []
 
 	def connect(self):
 		self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
 		self.room_group_name = "request%s" % self.room_name
-		self.check_permissions()
 		# Join room group
 		async_to_sync(self.channel_layer.group_add)(
 			self.room_group_name, self.channel_name
