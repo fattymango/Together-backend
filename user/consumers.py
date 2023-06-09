@@ -1,11 +1,11 @@
 from asgiref.sync import async_to_sync
 
-from channels_permissions.consumers import PermissionsJsonWebsocketConsumer
+from channels_permissions.consumers import PermissionsMixinJsonWebsocketConsumer
 from channels_permissions.permissions import NotAnonymousUser
 from .permissions import UserOwnsRoom
 
 
-class UserConsumer(PermissionsJsonWebsocketConsumer):
+class UserConsumer(PermissionsMixinJsonWebsocketConsumer):
 	permission_classes = [NotAnonymousUser, UserOwnsRoom]
 
 	def connect(self):

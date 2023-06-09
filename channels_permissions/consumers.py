@@ -1,29 +1,14 @@
 import logging
 
-from channels.consumer import AsyncConsumer
 from channels.exceptions import DenyConnection
 from channels.generic.websocket import WebsocketConsumer, JsonWebsocketConsumer
 
-from .permissions import BasePermission, FalseBasePermission
+from .mixins import PermissionsMixin
 
 logger = logging.getLogger(__name__)
 
 
-class Permissions(object):
-	permission_classes = [BasePermission]
-
-	def check_permissions(self):
-		try:
-			for permission in self.permission_classes:
-				if permission(scope=self.scope).validate() != None:
-					# logger.error(type(permission(scope=self.scope)))
-					raise DenyConnection
-
-		except PermissionError:
-			raise DenyConnection
-
-
-class PermissionsWebsocketConsumer(WebsocketConsumer, Permissions):
+class PermissionsMixinWebsocketConsumer(WebsocketConsumer, PermissionsMixin):
 	permission_classes = []
 
 	def websocket_connect(self, message):
@@ -34,7 +19,7 @@ class PermissionsWebsocketConsumer(WebsocketConsumer, Permissions):
 		super().websocket_connect(message)
 
 
-class PermissionsJsonWebsocketConsumer(JsonWebsocketConsumer, Permissions):
+class PermissionsMixinJsonWebsocketConsumer(JsonWebsocketConsumer, PermissionsMixin):
 	permission_classes = []
 
 	def websocket_connect(self, message):

@@ -6,9 +6,9 @@ from .models import BaseUser,SpecialNeed,Volunteer
 
 class BaseUserAdmin(UserAdmin):
     fieldsets = (
-        (None, {'fields': ('email', 'justID', 'password')}),
-        ('Personal info', {'fields': ('full_name', 'gender', "phone_number")}),
-        ('Permissions', {'fields': ('is_active', 'is_admin', 'is_just_admin', 'is_online')}),
+	    (None, {'fields': ('email', 'justID', 'password')}),
+	    ('Personal info', {'fields': ('full_name', 'gender', "phone_number")}),
+	    ('PermissionsMixin', {'fields': ('is_active', 'is_admin', 'is_just_admin', 'is_online')}),
 
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
@@ -28,16 +28,16 @@ class BaseUserAdmin(UserAdmin):
 
 class SpecialNeedAdmin(BaseUserAdmin):
     fieldsets = (
-        (None, {'fields': ('email', 'justID', 'password')}),
-        ('Personal info', {'fields': ('full_name', 'gender', 'disability_type', "phone_number")}),
-        ('Permissions', {'fields': ('is_active',)}),
+	    (None, {'fields': ('email', 'justID', 'password')}),
+	    ('Personal info', {'fields': ('full_name', 'gender', 'disability_type', "phone_number")}),
+	    ('PermissionsMixin', {'fields': ('is_active',)}),
     )
 
 class VolunteerAdmin(BaseUserAdmin):
     fieldsets = (
-        (None, {'fields': ('email', 'justID', 'password')}),
-        ('Personal info', {'fields': ('full_name', 'gender', 'is_validated', "phone_number")}),
-        ('Permissions', {'fields': ('is_active',)}),
+	    (None, {'fields': ('email', 'justID', 'password')}),
+	    ('Personal info', {'fields': ('full_name', 'gender', 'is_validated', "phone_number")}),
+	    ('PermissionsMixin', {'fields': ('is_active',)}),
     )
 
 

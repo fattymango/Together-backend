@@ -1,12 +1,12 @@
 from asgiref.sync import async_to_sync
 
-from channels_permissions.consumers import PermissionsJsonWebsocketConsumer
+from channels_permissions.consumers import PermissionsMixinJsonWebsocketConsumer
 from channels_permissions.permissions import *
 from chat.models import Message
 from chat.serializers import MessageSerializer
 
 
-class ChatRoomConsumer(PermissionsJsonWebsocketConsumer):
+class ChatRoomConsumer(PermissionsMixinJsonWebsocketConsumer):
 	permission_classes = [CanAccessChatRoom]
 	room = None
 	user = None

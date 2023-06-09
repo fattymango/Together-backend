@@ -4,9 +4,11 @@ from django.contrib.auth.models import AnonymousUser
 
 from chat.models import ChatRoom
 from request.models import Request
-from user.models import Volunteer,SpecialNeed
+from user.models import Volunteer, SpecialNeed
 
 logger = logging.getLogger(__name__)
+
+
 class BasePermission(object):
 	def __init__(self, scope, *args, **kwargs) -> None:
 		self.scope = scope
@@ -21,6 +23,7 @@ class BasePermission(object):
 		except Exception:
 			return RuntimeError
 		return None
+
 
 class FalseBasePermission(BasePermission):
 	def has_permission(self, *args, **kwargs) -> bool:
@@ -58,7 +61,6 @@ class VolunteerValidated(BasePermission):
 			return False
 
 
-
 class IsVolunteer(BasePermission):
 
 	def has_permission(self, *args, **kwargs) -> bool:
@@ -74,7 +76,7 @@ class IsSpecialNeeds(BasePermission):
 	def has_permission(self, *args, **kwargs) -> bool:
 		try:
 			user = get_specialneed(self.scope["user"].pk)
-			return isinstance(user,SpecialNeed)
+			return isinstance(user, SpecialNeed)
 		except Exception:
 			return False
 
@@ -90,8 +92,6 @@ class OwnsRequest(BasePermission):
 			return False
 
 
-
-
 class CanAccessChatRoom(BasePermission):
 
 	def has_permission(self, *args, **kwargs) -> bool:
@@ -103,13 +103,15 @@ class CanAccessChatRoom(BasePermission):
 		except Exception:
 			return False
 
-def get_chat_room(pk)->ChatRoom:
+
+def get_chat_room(pk) -> ChatRoom:
 	try:
 		return ChatRoom.objects.get(id=pk)
 
 	except ChatRoom.DoesNotExist:
 		logger.error("a7a")
 		raise ChatRoom.DoesNotExist
+
 
 def get_request(pk) -> Request:
 	try:
@@ -118,6 +120,7 @@ def get_request(pk) -> Request:
 	except Request.DoesNotExist:
 		raise Request.DoesNotExist
 
+
 def get_volunteer(pk) -> Volunteer:
 	try:
 		return Volunteer.objects.get(id=pk)
@@ -125,6 +128,7 @@ def get_volunteer(pk) -> Volunteer:
 		raise Volunteer.DoesNotExist
 	except Exception:
 		raise RuntimeError()
+
 
 def get_specialneed(pk) -> Volunteer:
 	try:
