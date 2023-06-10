@@ -8,7 +8,7 @@ from .mixins import PermissionsMixin
 logger = logging.getLogger(__name__)
 
 
-class PermissionsMixinWebsocketConsumer(WebsocketConsumer, PermissionsMixin):
+class PermissionsWebsocketConsumer(WebsocketConsumer, PermissionsMixin):
 	permission_classes = []
 
 	def websocket_connect(self, message):
@@ -19,7 +19,7 @@ class PermissionsMixinWebsocketConsumer(WebsocketConsumer, PermissionsMixin):
 		super().websocket_connect(message)
 
 
-class PermissionsMixinJsonWebsocketConsumer(JsonWebsocketConsumer, PermissionsMixin):
+class PermissionsJsonWebsocketConsumer(JsonWebsocketConsumer, PermissionsMixin):
 	permission_classes = []
 
 	def websocket_connect(self, message):
