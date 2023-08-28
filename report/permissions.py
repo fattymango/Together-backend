@@ -12,6 +12,8 @@ class ReportExists(permissions.BasePermission):
 	message = 'You cannot create a report, you have a report already.'
 
 	def has_permission(self, request, view):
+		if request.data.get("request", None) == None:
+			return True
 		try:
 			get_report(request.data["request"])
 			return False
@@ -24,6 +26,8 @@ class CanCreateReport(permissions.BasePermission):
 	message = 'You cannot create a report, you do not own this request.'
 
 	def has_permission(self, request, view):
+		if request.data.get("request", None) == None:
+			return True
 		try:
 			user = request.user
 

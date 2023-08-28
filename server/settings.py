@@ -199,14 +199,15 @@ CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis-broker:6381")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://redis-master:6379")
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
-
+Celery_BROKER_CONNECTION_RETRY = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+# EMAIL_USE_TLS = True
+EMAIL_USE_SSL = True
+EMAIL_PORT = 465
 
 # CSRF_COOKIE_SECURE = True
 # SESSION_COOKIE_SECURE = True

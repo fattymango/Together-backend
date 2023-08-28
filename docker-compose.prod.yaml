@@ -51,8 +51,9 @@ services:
       context: .
       dockerfile: prod/dockerfile
     container_name: gunicorn
-    command:  gunicorn $PROJECT_NAME.wsgi:application --bind $GUNICORN_IP:$GUNICORN_PORT
-
+    command: gunicorn $PROJECT_NAME.wsgi:application --bind $GUNICORN_IP:$GUNICORN_PORT
+    ports:
+      - 8000:8000
     expose:
       - 8000
     env_file:

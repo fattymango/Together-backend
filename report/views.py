@@ -30,6 +30,8 @@ class CreateReport(generics.CreateAPIView):
 			except AttributeError:
 				request.data._mutable = True
 				request.data.update({'user': request.user.id})
+			if request.data.get("request", None) == None:
+				request.data.update({'request': None})
 
 			return super().create(request, *args, **kwargs)
 		except Exception:
